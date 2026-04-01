@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "🎵 Radio Sing Sing",
+    "src": "http://stream.sing-sing-bis.org:8000/singsingaac128",
+    "type": "stream",
+    "description": "Sans pub"
+  },
+  {
+    "id": 2,
+    "name": "🎷 FIP",
+    "src": "https://icecast.radiofrance.fr/fip-midfi.mp3",
+    "type": "stream",
+    "description": "Éclectique"
+  },
+  {
+    "id": 3,
+    "name": "🌍 Radio Nova",
+    "src": "https://novazz.ice.infomaniak.ch/novazz-128.mp3",
+    "type": "stream",
+    "description": "World / Électro"
+  },
+  {
+    "id": 4,
+    "name": "🎺 Jazz Radio",
+    "src": "https://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3",
+    "type": "stream",
+    "description": "Jazz / Blues"
+  },
+  {
+    "id": 5,
+    "name": "🌿 Groove Salad",
+    "src": "https://ice1.somafm.com/groovesalad-128-mp3",
+    "type": "stream",
+    "description": "Ambient / Downtempo"
+  }
+]
