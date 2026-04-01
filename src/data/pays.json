@@ -1,0 +1,12 @@
+{
+  "france":    { "NAME": "France",                   "mainland": [-5.5, 41.0,  9.6, 51.2], "neon": [1.0,  0.05, 0.55] },
+  "usa":       { "NAME": "United States of America", "mainland": [-125, 24.0, -66.0, 50.0], "neon": [0.45, 0.10, 1.0]  },
+  "chine":     { "NAME": "China",                    "mainland": null,                       "neon": [1.0,  0.15, 0.15] },
+  "russie":    { "NAME": "Russia",                   "mainland": null,                       "neon": [0.65, 0.20, 1.0]  },
+  "bresil":    { "NAME": "Brazil",                   "mainland": null,                       "neon": [0.15, 1.0,  0.30] },
+  "inde":      { "NAME": "India",                    "mainland": null,                       "neon": [1.0,  0.50, 0.0]  },
+  "allemagne": { "NAME": "Germany",                  "mainland": null,                       "neon": [1.0,  0.80, 0.0]  },
+  "japon":     { "NAME": "Japan",                    "mainland": null,                       "neon": [1.0,  0.0,  0.75] },
+  "nigeria":   { "NAME": "Nigeria",                  "mainland": null,                       "neon": [0.85, 1.0,  0.0]  },
+  "arabie":    { "NAME": "Saudi Arabia",             "mainland": null,                       "neon": [0.90, 0.75, 0.10] }
+}

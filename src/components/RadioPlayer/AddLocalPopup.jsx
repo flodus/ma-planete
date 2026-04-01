@@ -1,5 +1,6 @@
 // components/RadioPlayer/AddLocalPopup.jsx
 import { useRef } from 'react'
+import { ACCENT, accentRgba } from '../../styles/theme.js'
 
 export default function AddLocalPopup({ isOpen, onClose, onAdd }) {
     const fileInputRef = useRef(null)
@@ -23,9 +24,9 @@ export default function AddLocalPopup({ isOpen, onClose, onAdd }) {
             <div style={{
                 position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                 background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(12px)', borderRadius: '12px',
-                padding: '20px', border: '1px solid rgba(198,162,76,0.5)', zIndex: 1001, minWidth: '280px'
+                padding: '20px', border: `1px solid ${accentRgba(0.5)}`, zIndex: 1001, minWidth: '280px'
             }}>
-            <div style={{ color: '#c6a24c', fontSize: '12px', marginBottom: '16px', fontWeight: 'bold' }}>
+            <div style={{ color: ACCENT, fontSize: '12px', marginBottom: '16px', fontWeight: 'bold' }}>
             📁 Ajouter un fichier audio
             </div>
             <input
@@ -36,7 +37,7 @@ export default function AddLocalPopup({ isOpen, onClose, onAdd }) {
             onChange={handleFileUpload}
             style={{
                 width: '100%', background: 'rgba(255,255,255,0.1)',
-                border: '0.5px solid rgba(198,162,76,0.3)', borderRadius: '6px',
+                border: `0.5px solid ${accentRgba(0.3)}`, borderRadius: '6px',
                 padding: '8px', color: 'white', fontSize: '11px', marginBottom: '16px'
             }}
             />

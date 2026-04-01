@@ -33,6 +33,19 @@ void main(){
 export const fondFrag = `varying vec2 vUv; uniform sampler2D uTexture;
 void main(){gl_FragColor=texture2D(uTexture,vUv);}`
 
+// Néons — positions sphère pré-calculées, vScan = longitude
+export const neonVertexShader = `
+varying float vScan;
+void main() {
+  vScan = atan(position.x, position.z);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`
+
+// Génère un fragment shader néon avec couleur et optionnellement uAlpha pour le fondu morph
+export const neonFrag = (r, g, b, avecAlpha = false) =>
+  `uniform float uTime; ${avecAlpha ? 'uniform float uAlpha;' : ''} varying float vScan;
+void main(){ float p=clamp(0.25+0.15*sin(vScan-uTime*0.5),0.10,0.38); gl_FragColor=vec4(${r},${g},${b},p${avecAlpha ? '*uAlpha' : ''}); }`
+
 export function creerTexture() {
   const c=document.createElement('canvas'); c.width=1024; c.height=512;
   const ctx=c.getContext('2d');

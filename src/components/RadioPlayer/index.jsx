@@ -1,5 +1,6 @@
 // components/RadioPlayer/index.jsx
 import { useState } from 'react'
+import { accentRgba } from '../../styles/theme.js'
 import { useRadioPlayer } from './useRadioPlayer'
 import RadioButton from './RadioButton'
 import StationDisplay from './StationDisplay'
@@ -50,7 +51,7 @@ function RadioPlayer() {
             backdropFilter: 'blur(3px)',
             borderRadius: '16px',
             padding: '3px 8px',
-            border: '0.5px solid rgba(198,162,76,0.25)'
+            border: `0.5px solid ${accentRgba(0.25)}`
         }}>
         <RadioButton isPlaying={isPlaying} onToggle={togglePlay} />
         <StationDisplay isPlaying={isPlaying} name={getDisplayName(currentStation.name)} />

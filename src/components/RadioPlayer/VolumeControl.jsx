@@ -1,4 +1,6 @@
 // components/RadioPlayer/VolumeControl.jsx
+import { ACCENT, accentRgba } from '../../styles/theme.js'
+
 export default function VolumeControl({ volume, showVolume, onToggle, onChange }) {
     return (
         <div style={{ position: 'relative' }}>
@@ -12,7 +14,7 @@ export default function VolumeControl({ volume, showVolume, onToggle, onChange }
             <div style={{
                 position: 'absolute', top: '100%', right: '0', marginTop: '6px',
                 background: 'rgba(0,0,0,0.8)', borderRadius: '12px', padding: '8px',
-                        border: '0.5px solid rgba(198,162,76,0.3)'
+                border: `0.5px solid ${accentRgba(0.3)}`
             }}>
             <input
             type="range"
@@ -29,7 +31,7 @@ export default function VolumeControl({ volume, showVolume, onToggle, onChange }
             <style>{`
                 input[type="range"]::-webkit-slider-thumb {
                     -webkit-appearance: none; width: 8px; height: 8px;
-                    border-radius: 50%; background: #c6a24c; cursor: pointer;
+                    border-radius: 50%; background: ${ACCENT}; cursor: pointer;
                 }
                 `}</style>
                 </div>

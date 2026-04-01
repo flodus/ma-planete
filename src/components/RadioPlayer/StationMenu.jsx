@@ -1,4 +1,6 @@
 // components/RadioPlayer/StationMenu.jsx
+import { ACCENT, accentRgba } from '../../styles/theme.js'
+
 export default function StationMenu({
     isOpen,
     onToggle,
@@ -9,7 +11,7 @@ export default function StationMenu({
     onReset,
     onAddUrl,
     onAddLocal,
-    isDefaultStation  // nouvelle prop
+    isDefaultStation
 }) {
     if (!isOpen) return null
 
@@ -25,21 +27,21 @@ export default function StationMenu({
             <div style={{
                 position: 'absolute', top: '100%', right: '0', marginTop: '6px',
                 background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(12px)',
-                borderRadius: '8px', border: '0.5px solid rgba(198,162,76,0.4)',
+                borderRadius: '8px', border: `0.5px solid ${accentRgba(0.4)}`,
                 overflow: 'hidden', minWidth: '200px', maxHeight: '350px', overflowY: 'auto'
             }}>
             <div style={{
                 padding: '6px 10px',
-                borderBottom: '0.5px solid rgba(198,162,76,0.3)',
+                borderBottom: `0.5px solid ${accentRgba(0.3)}`,
                 fontSize: '8px',
-                color: '#c6a24c',
+                color: ACCENT,
                 display: 'flex',
                 justifyContent: 'space-between'
             }}>
             <span>📻 RADIOS</span>
             <button onClick={onReset} style={{
                 background: 'transparent', border: 'none',
-                color: '#c6a24c', cursor: 'pointer', fontSize: '8px'
+                color: ACCENT, cursor: 'pointer', fontSize: '8px'
             }}>
             ↺ Réinitialiser
             </button>
@@ -49,9 +51,9 @@ export default function StationMenu({
                 <div key={station.id} onClick={() => onChangeStation(station)} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '6px 10px', cursor: 'pointer', fontSize: '10px',
-                    color: currentStation.id === station.id ? '#c6a24c' : 'rgba(255,255,255,0.7)',
-                                      background: currentStation.id === station.id ? 'rgba(198,162,76,0.15)' : 'transparent',
-                                      borderBottom: '0.5px solid rgba(198,162,76,0.1)'
+                    color: currentStation.id === station.id ? ACCENT : 'rgba(255,255,255,0.7)',
+                    background: currentStation.id === station.id ? accentRgba(0.15) : 'transparent',
+                    borderBottom: `0.5px solid ${accentRgba(0.1)}`
                 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>{station.type === 'local' ? '📁' : station.type === 'custom' ? '🔗' : '📡'}</span>
@@ -60,7 +62,6 @@ export default function StationMenu({
                     <span style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)' }}>{station.description}</span>
                 )}
                 </span>
-                {/* La croix n'apparaît que si ce n'est PAS une station par défaut */}
                 {!isDefaultStation(station) && (
                     <button onClick={(e) => { e.stopPropagation(); onRemoveStation(station.id) }} style={{
                         background: 'transparent', border: 'none',
@@ -72,16 +73,16 @@ export default function StationMenu({
                 </div>
             ))}
 
-            <div style={{ borderTop: '0.5px solid rgba(198,162,76,0.3)' }} />
+            <div style={{ borderTop: `0.5px solid ${accentRgba(0.3)}` }} />
             <div onClick={onAddLocal} style={{
-                padding: '6px 10px', cursor: 'pointer', fontSize: '9px', color: '#c6a24c',
-                background: 'rgba(198,162,76,0.05)'
+                padding: '6px 10px', cursor: 'pointer', fontSize: '9px', color: ACCENT,
+                background: accentRgba(0.05)
             }}>
             📁 + AJOUTER FICHIER MP3
             </div>
             <div onClick={onAddUrl} style={{
-                padding: '6px 10px', cursor: 'pointer', fontSize: '9px', color: '#c6a24c',
-                background: 'rgba(198,162,76,0.05)', borderTop: '0.5px solid rgba(198,162,76,0.2)'
+                padding: '6px 10px', cursor: 'pointer', fontSize: '9px', color: ACCENT,
+                background: accentRgba(0.05), borderTop: `0.5px solid ${accentRgba(0.2)}`
             }}>
             🔗 + AJOUTER FLUX URL
             </div>
