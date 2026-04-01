@@ -2,35 +2,44 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { fbm } from '../../utils/bruit.js'
+import { SEUIL_TERRE } from '../../utils/hex.js'
 import { useHexagonesGlobe, RAYON_GLOBE } from '../../hooks/useHexagonesGlobe.js'
 
-function createOceanTexture() {
+// Texture equirectangulaire cohérente avec la carte hex (même seed = même géographie)
+function creerTextureFictive(seed) {
+  const W = 1024, H = 512
   const canvas = document.createElement('canvas')
-  canvas.width = 1024; canvas.height = 512
+  canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')
-  const grad = ctx.createLinearGradient(0, 0, 0, 512)
-  grad.addColorStop(0,   '#1a5a8a')
-  grad.addColorStop(0.5, '#0e4a7a')
-  grad.addColorStop(1,   '#0a3a6a')
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, 1024, 512)
-  for (let i = 0; i < 400; i++) {
-    ctx.fillStyle = `rgba(120, 200, 255, ${Math.random() * 0.2})`
-    ctx.beginPath()
-    ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 4 + 1, 0, Math.PI * 2)
-    ctx.fill()
+  const img = ctx.createImageData(W, H)
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const h    = fbm(x / W * 3.8, y / H * 3.8, seed)
+      const fade = Math.min(1, x / 25, (W - 1 - x) / 25, y / 15, (H - 1 - y) / 15)
+      const hf   = h * fade
+      const i4   = (y * W + x) * 4
+      if (hf >= SEUIL_TERRE) {
+        const t = Math.min(1, (hf - SEUIL_TERRE) / 0.45)
+        img.data[i4]   = Math.round(18  + t * 100)
+        img.data[i4+1] = Math.round(45  + t * 55)
+        img.data[i4+2] = Math.round(38  + t * 105)
+      } else {
+        const t = hf / SEUIL_TERRE
+        img.data[i4]   = Math.round(2   + t * 13)
+        img.data[i4+1] = Math.round(10  + t * 32)
+        img.data[i4+2] = Math.round(25  + t * 55)
+      }
+      img.data[i4+3] = 255
+    }
   }
-  ctx.strokeStyle = 'rgba(100, 180, 240, 0.25)'; ctx.lineWidth = 0.6
-  for (let i = 0; i < 1024; i += 35) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(0, i / 2); ctx.lineTo(1024, i / 2); ctx.stroke()
-  }
+  ctx.putImageData(img, 0, 0)
   return new THREE.CanvasTexture(canvas)
 }
 
 export default function GlobeFictif({ seed }) {
-  const groupRef     = useRef()
-  const oceanTexture = useMemo(() => createOceanTexture(), [])
+  const groupRef  = useRef()
+  const oceanTexture = useMemo(() => creerTextureFictive(seed), [seed])
   const hexMeshes    = useHexagonesGlobe(seed)
 
   useFrame((_, delta) => {

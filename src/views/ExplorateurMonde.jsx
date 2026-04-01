@@ -8,6 +8,7 @@ import { RAYON } from '../shaders/globe.js'
 import { couleurNeon } from '../utils/geo.js'
 import SceneGlobeMercator, { ResetCameraPlan } from '../components/scene/SceneGlobeMercator.jsx'
 import SceneWarRoom from '../components/scene/SceneWarRoom.jsx'
+import LigneScan from '../components/LigneScan.jsx'
 
 const ui = {
   c:   { position:'absolute', inset:0, pointerEvents:'none', zIndex:100 },
@@ -74,12 +75,15 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
     )}
 
     {estWarRoom && cfg && (
+      <>
       <Canvas camera={{position:[0,0,RAYON*3], fov:45}}>
         <color attach="background" args={['#020208']}/>
         <ambientLight intensity={0.1}/>
         <Stars radius={130} depth={60} count={45000} factor={5} saturation={0} fade speed={0.2}/>
         <SceneWarRoom geoData={geo10} cfg={cfg}/>
       </Canvas>
+      <LigneScan couleur="#00e5ff" />
+      </>
     )}
 
     {/* UI overlay */}
