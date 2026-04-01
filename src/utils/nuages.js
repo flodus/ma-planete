@@ -4,19 +4,33 @@ export const NUAGES_VISIBLE_MAX_SCALE = 1.5
 export function genererNuages(largeur, hauteur) {
   const nuages = []
   for (let i = 0; i < 45; i++) {
-    let size
+    let baseSize
     const rand = Math.random()
-    if (rand < 0.4)      size = 20 + Math.random() * 15
-    else if (rand < 0.7) size = 35 + Math.random() * 20
-    else                 size = 55 + Math.random() * 25
+    if (rand < 0.4)      baseSize = 20 + Math.random() * 15
+    else if (rand < 0.7) baseSize = 35 + Math.random() * 20
+    else                 baseSize = 55 + Math.random() * 25
+
+    const baseY       = 30 + Math.random() * (hauteur - 60)
+    const baseOpacity = 0.4 + Math.random() * 0.4
+    const baseSpeed   = 0.6 + Math.random() * 1.2
 
     nuages.push({
-      id:      i,
-      x:       Math.random() * (largeur + 400) - 200,
-      y:       30 + Math.random() * (hauteur - 60),
-      size,
-      speed:   0.6 + Math.random() * 1.2,
-      opacity: 0.4 + Math.random() * 0.4,
+      id:              i,
+      phase:           Math.random() * Math.PI * 2,
+      baseX:           Math.random() * (largeur + 400) - 200,
+      baseY,
+      baseSize,
+      baseSpeed,
+      baseOpacity,
+      amplitudeY:      20 + Math.random() * 40,
+      amplitudeSize:   8  + Math.random() * 20,
+      amplitudeOpacity:0.15 + Math.random() * 0.25,
+      speedVariation:  0.3 + Math.random() * 0.8,
+      // valeurs courantes initialisées aux valeurs de base
+      currentY:        baseY,
+      currentSize:     baseSize,
+      currentOpacity:  baseOpacity,
+      currentSpeed:    baseSpeed,
     })
   }
   return nuages

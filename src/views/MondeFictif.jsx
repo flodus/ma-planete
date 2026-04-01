@@ -43,6 +43,15 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
       lastTime = now
       tempsRef.current += delta * 0.5
       setCloudOffset(prev => (prev + delta * 0.8) % (VB_W * 2))
+      setNuages(prev => prev.map(c => ({
+        ...c,
+        currentY:       c.baseY       + Math.sin(tempsRef.current * 0.4 + c.phase * 1.3) * c.amplitudeY,
+        currentSize:    c.baseSize    + Math.sin(tempsRef.current * 0.6 + c.phase)        * c.amplitudeSize,
+        currentOpacity: Math.min(0.85, Math.max(0.3,
+          c.baseOpacity + Math.sin(tempsRef.current * 0.7 + c.phase * 0.8) * c.amplitudeOpacity
+        )),
+        currentSpeed:   c.baseSpeed   + Math.sin(tempsRef.current * 0.3 + c.phase)        * c.speedVariation * 0.3,
+      })))
       cloudAnimRef.current = requestAnimationFrame(animateClouds)
     }
     cloudAnimRef.current = requestAnimationFrame(animateClouds)

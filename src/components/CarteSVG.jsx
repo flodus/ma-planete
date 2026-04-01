@@ -105,12 +105,11 @@ export default function CarteSVG({
         })}
 
         {nuagesVisibles && nuages.map((cloud) => {
-          const facteurVitesse = 80
-          const xPos = (cloud.x + cloudOffset * cloud.speed * facteurVitesse) % (VB_W + 500) - 250
+          const xPos = (cloud.baseX + cloudOffset * cloud.currentSpeed * 80) % (VB_W + 500) - 250
           return (
             <path key={`cloud-${cloud.id}`}
-              d={createCloudPath(xPos, cloud.y, cloud.size)}
-              fill={`rgba(245, 248, 255, ${cloud.opacity * nuagesOpacity})`}
+              d={createCloudPath(xPos, cloud.currentY, cloud.currentSize)}
+              fill={`rgba(245, 248, 255, ${cloud.currentOpacity * nuagesOpacity})`}
               filter="url(#cloud-blur)" stroke="none"
               style={{ pointerEvents: 'none' }} />
           )
