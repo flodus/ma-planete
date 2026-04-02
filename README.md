@@ -1,16 +1,49 @@
-# React + Vite
+# ma-planete
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Prototype de visualisation géopolitique — globe 3D, planisphère et monde procédural.
 
-Currently, two official plugins are available:
+**[→ Démo live](https://flodus.github.io/ma-planete)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Vues
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Globe & Planisphère
+Globe interactif avec morphing animé vers une projection Mercator plate.
+Les 10 pays du jeu ARIA sont mis en valeur avec des néons colorés pulsants.
+- Double-clic sur le globe → bascule en planisphère
+- Clic sur un pays → sélection / survol
+- Double-clic sur un pays en planisphère → War Room
 
-## Expanding the ESLint configuration
+### War Room
+Vue zoomée sur un pays sélectionné avec néon + ligne de scan couleur pays.
+Filtrage mainland pour France, USA, Russie (exclut les territoires d'outre-mer).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Monde Fictif
+Carte isométrique hexagonale générée procéduralement.
+Terrains, reliefs, océans avec profondeur, royaumes nommés aléatoirement.
+
+### Radio
+Lecteur audio intégré avec stations prédéfinies et support de playlists/MP3 personnalisés (persistés en localStorage).
+
+---
+
+## Stack
+
+- **React 19** + **Vite**
+- **Three.js** / **@react-three/fiber** / **@react-three/drei**
+- Shaders GLSL custom (morphing sphère↔mercator, néons, scan)
+- GeoJSON Natural Earth (110m / 50m / 10m)
+- Styles inline uniquement — pas de CSS modules
+
+## Lancer en local
+
+```bash
+npm install
+npm run dev       # http://localhost:5173
+npm run build     # build de production
+```
+
+---
+
+Prototype intégré dans [ARIA](https://github.com/flodus/aria-llm-council) — simulation de gouvernance multi-LLM.
