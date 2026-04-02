@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { mulberry32 } from '../utils/tectonique.js'
 import { fbm } from '../utils/bruit.js'
 import { COLS, ROWS, VB_W, VB_H, SEUIL_TERRE, DX, DY, voisin, hexCornersOff, hexPath, hexEdge, ptsToPath } from '../utils/hex.js'
-import { biomeCouleur, couleurOcean, shuffler, nbCouchesTerre, nbCouchesOcean, eclairir } from '../utils/palette.js'
+import { biomeCouleur, couleurOcean, shuffler, nbCouchesTerre, eclairir } from '../utils/palette.js'
 
 // ─── Noms procéduraux ─────────────────────────────────────────────────────────
 const SYLLABES = ['ar','el','an','or','en','al','ir','on','eth','un','ath','ul','os','is','ur','im','az','ev','ix','ow']
@@ -138,26 +138,17 @@ export function useGenerationCarte(localSeed) {
         if (estTerre) {
           const n           = nbCouchesTerre(h)
           const baseCouleur = biomeCouleur(h)
-          // Toutes les couches rendues — la couche 0 = sol, la couche 1 = sommet colline/montagne
-          for (let i = 0; i < n; i++) {
-            ajout(terreSurfD[i], eclairir(baseCouleur, 1 + i * 0.18), ptsToPath(hexCornersOff(c, r, -i * DX, -i * DY)))
-          }
+          // Une seule couche par hex : uniquement le sommet (layer n-1)
+          // Le relief visuel vient du décalage (-DX*i, -DY*i), pas des couches empilées
+          const i = n - 1
+          ajout(terreSurfD[i], eclairir(baseCouleur, 1 + i * 0.18), ptsToPath(hexCornersOff(c, r, -i * DX, -i * DY)))
           if (p !== -1) paysD[p] = (paysD[p] || '') + hexPath(c, r)
 
         } else {
+          // Océan : surface uniquement, pas de couches de profondeur
           const dcVal       = dCote[r][c]
-          // dCote===0 = première rangée d'hexes océan (plage) : on ne la rend pas
-          // Le trait cyan (coteD) suffit à marquer la frontière terre/mer
-          if (dcVal === 0) {
-            // skip — hex de plage invisible
-          } else {
-            const baseCouleur = couleurOcean(dcVal >= 0 ? Math.min(dcVal, 2) : 3)
-            ajout(oceanSurfD[0], baseCouleur, ptsToPath(hexCornersOff(c, r, 0, 0)))
-            const n = nbCouchesOcean(h)
-            for (let i = 1; i <= n; i++) {
-              ajout(oceanSurfD[i], eclairir(baseCouleur, 1 - i * 0.15), ptsToPath(hexCornersOff(c, r, i * DX, i * DY)))
-            }
-          }
+          const baseCouleur = couleurOcean(dcVal >= 0 ? Math.min(dcVal, 2) : 3)
+          ajout(oceanSurfD[0], baseCouleur, ptsToPath(hexCornersOff(c, r, 0, 0)))
         }
 
         for (let k = 0; k < 6; k++) {
