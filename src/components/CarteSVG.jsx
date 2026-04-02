@@ -1,6 +1,6 @@
 // components/CarteSVG.jsx — rendu SVG de la carte hex fictive
 import React from 'react'
-import { VB_W, VB_H } from '../utils/hex.js'
+import { VB_W, VB_H, hexCenter } from '../utils/hex.js'
 import { neonPays } from '../utils/palette.js'
 import { createCloudPath } from '../utils/nuages.js'
 
@@ -11,7 +11,8 @@ export default function CarteSVG({
 }) {
   const { oceanSurfD, oceanFaceD, oceanGradD,
           terreSurfD, terreFaceD, terreGradD,
-          paysD, frontD, coteD, particules } = svgData
+          paysD, frontD, coteD, particules,
+          paysCentres, nomsPays } = svgData
 
   const nPart = lod === 2 ? 200 : 120
 
@@ -50,6 +51,7 @@ export default function CarteSVG({
           <circle key={i} cx={pt.x} cy={pt.y} r="0.8" fill="#1a3a5a" opacity="0.4" />
         ))}
 
+        {/* Océan */}
         {[0, 1, 2, 3].map(i => (
           <React.Fragment key={`oi-${i}`}>
             {i > 0 && Object.entries(oceanFaceD[i]).map(([c, d]) => d &&
@@ -64,23 +66,26 @@ export default function CarteSVG({
           </React.Fragment>
         ))}
 
+        {/* Terrain : surface + faces isométriques entrelacées */}
         {[0, 1, 2, 3, 4, 5, 6].map(i => (
           <React.Fragment key={`ti-${i}`}>
-            {i > 0 && Object.entries(terreFaceD[i]).map(([c, d]) => d &&
+            {Object.entries(terreSurfD[i]).map(([c, d]) => d &&
+              <path key={`ts-${i}-${c}`} d={d} fill={c} stroke="none"
+                filter={i === 1 ? "url(#relief-shadow)" : undefined} />
+            )}
+            {Object.entries(terreFaceD[i]).map(([c, d]) => d &&
               <path key={`tf-${i}-${c}`} d={d} fill={c} stroke="none" />
             )}
             {i > 0 && terreGradD[i] &&
               <path key={`tg-${i}`} d={terreGradD[i]} fill="url(#ombre-couche)" stroke="none" />
             }
-            {Object.entries(terreSurfD[i]).map(([c, d]) => d &&
-              <path key={`ts-${i}-${c}`} d={d} fill={c} stroke="none"
-                filter={i === 1 ? "url(#relief-shadow)" : undefined} />
-            )}
           </React.Fragment>
         ))}
 
+        {/* Côtes */}
         {coteD && <path d={coteD} stroke="rgba(0,210,245,0.50)" strokeWidth="0.9" fill="none" />}
 
+        {/* Frontières + zones de hover pays */}
         {Object.keys(frontD).map(idx => {
           const id  = +idx
           const isH = hoveredPays === id
@@ -104,6 +109,28 @@ export default function CarteSVG({
           )
         })}
 
+        {/* Noms des royaumes — LOD 1 et 2 */}
+        {lod >= 1 && nomsPays && Object.entries(nomsPays).map(([pidStr, nom]) => {
+          const pid    = +pidStr
+          const centre = paysCentres?.[pid]
+          if (!centre) return null
+          const [cx, cy] = hexCenter(centre.sumC / centre.n, centre.sumR / centre.n)
+          return (
+            <text key={`nom-${pid}`}
+              x={cx} y={cy}
+              fontSize={lod === 2 ? 16 : 22}
+              fill="rgba(220,235,255,0.75)"
+              stroke="rgba(0,5,20,0.85)"
+              strokeWidth={lod === 2 ? 3 : 4}
+              textAnchor="middle" dominantBaseline="middle"
+              fontFamily="monospace" letterSpacing="0.08em"
+              style={{ paintOrder: 'stroke fill', userSelect: 'none', pointerEvents: 'none' }}>
+              {nom}
+            </text>
+          )
+        })}
+
+        {/* Nuages */}
         {nuagesVisibles && nuages.map((cloud) => {
           const xPos = (cloud.baseX + cloudOffset * cloud.currentSpeed * 80) % (VB_W + 500) - 250
           return (

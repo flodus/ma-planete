@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { CURSEUR_POINTER } from '../utils/curseurs.js'
 import { VB_W, VB_H, hexCenter } from '../utils/hex.js'
+import { neonPays } from '../utils/palette.js'
 import { NUAGES_VISIBLE_MAX_SCALE, genererNuages } from '../utils/nuages.js'
 import { useGenerationCarte } from '../hooks/useGenerationCarte.js'
 import CarteSVG from '../components/CarteSVG.jsx'
@@ -24,18 +25,15 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
     y: Math.round((window.innerHeight - VB_H * 0.5) / 2),
   }))
 
-  const wrapRef          = useRef(null)
-  const ptrDown          = useRef(false)
-  const lastXY           = useRef([0, 0])
-  const cloudAnimRef     = useRef(null)
-  const tempsRef         = useRef(0)
+  const wrapRef      = useRef(null)
+  const ptrDown      = useRef(false)
+  const lastXY       = useRef([0, 0])
+  const cloudAnimRef = useRef(null)
+  const tempsRef     = useRef(0)
 
   useEffect(() => { setLocalSeed(seed) }, [seed])
-
-  // Génération des nuages (change à chaque nouvelle carte)
   useEffect(() => { setNuages(genererNuages(VB_W, VB_H)) }, [localSeed])
 
-  // Animation nuages
   useEffect(() => {
     let lastTime = performance.now()
     function animateClouds(now) {
@@ -58,7 +56,6 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
     return () => { if (cloudAnimRef.current) cancelAnimationFrame(cloudAnimRef.current) }
   }, [])
 
-  // Zoom molette
   useEffect(() => {
     const el = wrapRef.current
     if (!el) return
@@ -88,9 +85,8 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
   const onPtrUp = () => { ptrDown.current = false }
 
   const svgData = useGenerationCarte(localSeed)
-  const { nRoyaumes, paysCentres } = svgData
+  const { nRoyaumes, paysCentres, nomsPays, biomesPays } = svgData
 
-  // Centrage sur pays sélectionné
   useEffect(() => {
     if (paysSelectionne == null) return
     const centre = paysCentres[paysSelectionne]
@@ -100,9 +96,17 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
     setXf({ scale, x: window.innerWidth / 2 - svgX * scale, y: window.innerHeight / 2 - svgY * scale })
   }, [paysSelectionne, paysCentres])
 
-  const lod             = xf.scale < 0.7 ? 0 : xf.scale < 2.0 ? 1 : 2
-  const nuagesVisibles  = xf.scale < NUAGES_VISIBLE_MAX_SCALE
-  const nuagesOpacity   = nuagesVisibles ? Math.max(0, 1 - (xf.scale / NUAGES_VISIBLE_MAX_SCALE) * 0.7) : 0
+  const lod            = xf.scale < 0.7 ? 0 : xf.scale < 2.0 ? 1 : 2
+  const nuagesVisibles = xf.scale < NUAGES_VISIBLE_MAX_SCALE
+  const nuagesOpacity  = nuagesVisibles ? Math.max(0, 1 - (xf.scale / NUAGES_VISIBLE_MAX_SCALE) * 0.7) : 0
+
+  // Infos du pays survolé
+  const infoHover = hoveredPays !== null ? {
+    nom:   nomsPays?.[hoveredPays]   ?? `Royaume #${hoveredPays}`,
+    biome: biomesPays?.[hoveredPays] ?? '—',
+    taille: paysCentres?.[hoveredPays]?.n ?? 0,
+    couleur: neonPays(hoveredPays),
+  } : null
 
   return (
     <div ref={wrapRef}
@@ -114,7 +118,6 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
       <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10,
         display: 'flex', alignItems: 'center', gap: '12px', pointerEvents: 'all' }}
         onPointerDown={e => e.stopPropagation()}>
-
         {onRetour
           ? <button onClick={onRetour} style={btnStyle}>{paysSelectionne !== null ? '← PLANISPHÈRE' : '← GLOBE'}</button>
           : <button onClick={onMondeReel} style={btnStyle}>← MONDE RÉEL</button>
@@ -149,6 +152,37 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
         setHoveredPays={setHoveredPays}
         onPaysDoubleClick={onPaysDoubleClick}
       />
+
+      {/* Panel hover pays */}
+      {infoHover && (
+        <div style={{
+          position: 'absolute', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
+          pointerEvents: 'none', zIndex: 20,
+          display: 'flex', alignItems: 'center', gap: '20px',
+          background: 'rgba(0,6,18,0.88)', backdropFilter: 'blur(6px)',
+          border: `1px solid ${infoHover.couleur}44`,
+          borderRadius: '4px', padding: '8px 24px',
+        }}>
+          <span style={{
+            fontFamily: 'monospace', fontSize: '1rem', letterSpacing: '0.12em',
+            color: infoHover.couleur,
+          }}>
+            {infoHover.nom}
+          </span>
+          <span style={{
+            fontFamily: 'monospace', fontSize: '0.72rem', letterSpacing: '0.1em',
+            color: 'rgba(180,220,255,0.5)', textTransform: 'uppercase',
+          }}>
+            {infoHover.biome}
+          </span>
+          <span style={{
+            fontFamily: 'monospace', fontSize: '0.72rem', letterSpacing: '0.08em',
+            color: 'rgba(180,220,255,0.35)',
+          }}>
+            {infoHover.taille.toLocaleString()} hex
+          </span>
+        </div>
+      )}
     </div>
   )
 }
