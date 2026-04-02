@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { mulberry32 } from '../utils/tectonique.js'
 import { fbm } from '../utils/bruit.js'
 import { COLS, ROWS, VB_W, VB_H, SEUIL_TERRE, DX, DY, voisin, hexCornersOff, hexPath, hexEdge, ptsToPath } from '../utils/hex.js'
-import { biomeCouleur, couleurOcean, shuffler, nbCouchesTerre, nbCouchesOcean, eclairir, assombrir } from '../utils/palette.js'
+import { biomeCouleur, couleurOcean, shuffler, nbCouchesTerre, nbCouchesOcean, eclairir } from '../utils/palette.js'
 
 // ─── Noms procéduraux ─────────────────────────────────────────────────────────
 const SYLLABES = ['ar','el','an','or','en','al','ir','on','eth','un','ath','ul','os','is','ur','im','az','ev','ix','ow']
@@ -25,14 +25,6 @@ function biomeParHauteur(h) {
   if (h < 0.90) return 'Montagnes'
   return 'Hauts sommets'
 }
-
-// ─── Quad SVG pour face isométrique ──────────────────────────────────────────
-function facePath(a, b, c, d) {
-  return `M${a[0].toFixed(1)},${a[1].toFixed(1)}L${b[0].toFixed(1)},${b[1].toFixed(1)}L${c[0].toFixed(1)},${c[1].toFixed(1)}L${d[0].toFixed(1)},${d[1].toFixed(1)}Z`
-}
-
-// Avec offset (-DX,-DY) vers haut-gauche, les faces visibles sont sur k=1,2,3
-const EDGES_FACES_VISIBLES = [1, 2, 3]
 
 export function useGenerationCarte(localSeed) {
   return useMemo(() => {
@@ -145,38 +137,10 @@ export function useGenerationCarte(localSeed) {
         if (estTerre) {
           const n           = nbCouchesTerre(h)
           const baseCouleur = biomeCouleur(h)
-
+          // Toutes les couches rendues — la couche 0 = sol, la couche 1 = sommet colline/montagne
           for (let i = 0; i < n; i++) {
-            // Optimisation : couches intérieures cachées → skip
-            if (i > 0) {
-              let visible = false
-              for (let k = 0; k < 6; k++) {
-                const [nc, nr] = voisin(c, r, k)
-                if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) { visible = true; break }
-                if (massIdx[nr][nc] === -1) { visible = true; break }
-                if (nbCouchesTerre(heights[nr][nc]) < i + 1) { visible = true; break }
-              }
-              if (!visible) continue
-            }
             ajout(terreSurfD[i], eclairir(baseCouleur, 1 + i * 0.18), ptsToPath(hexCornersOff(c, r, -i * DX, -i * DY)))
           }
-
-          // Faces isométriques (murs visibles entre niveaux)
-          if (n >= 2) {
-            const faceCouleur  = assombrir(baseCouleur, 0.70)
-            const cornersHaut  = hexCornersOff(c, r, -DX, -DY)
-            const cornersBas   = hexCornersOff(c, r,   0,   0)
-            for (const k of EDGES_FACES_VISIBLES) {
-              const [nc, nr] = voisin(c, r, k)
-              const nCouches = (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && massIdx[nr][nc] !== -1)
-                ? nbCouchesTerre(heights[nr][nc]) : 0
-              if (nCouches >= 2) continue
-              const k1 = (k + 1) % 6
-              ajout(terreFaceD[1], faceCouleur,
-                facePath(cornersHaut[k], cornersHaut[k1], cornersBas[k1], cornersBas[k]))
-            }
-          }
-
           if (p !== -1) paysD[p] = (paysD[p] || '') + hexPath(c, r)
 
         } else {
@@ -185,7 +149,8 @@ export function useGenerationCarte(localSeed) {
           ajout(oceanSurfD[0], baseCouleur, ptsToPath(hexCornersOff(c, r, 0, 0)))
           const n = nbCouchesOcean(h)
           for (let i = 1; i <= n; i++) {
-            if (dcVal === 0 && i === 1) continue  // plage : skip première couche de profondeur
+            // Plage (dCote===0) : on saute la première couche de profondeur
+            if (dcVal === 0 && i === 1) continue
             ajout(oceanSurfD[i], eclairir(baseCouleur, 1 - i * 0.15), ptsToPath(hexCornersOff(c, r, i * DX, i * DY)))
           }
         }

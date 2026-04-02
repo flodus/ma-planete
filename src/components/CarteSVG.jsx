@@ -66,19 +66,19 @@ export default function CarteSVG({
           </React.Fragment>
         ))}
 
-        {/* Terrain : surface + faces isométriques entrelacées */}
+        {/* Terrain */}
         {[0, 1, 2, 3, 4, 5, 6].map(i => (
           <React.Fragment key={`ti-${i}`}>
-            {Object.entries(terreSurfD[i]).map(([c, d]) => d &&
-              <path key={`ts-${i}-${c}`} d={d} fill={c} stroke="none"
-                filter={i === 1 ? "url(#relief-shadow)" : undefined} />
-            )}
-            {Object.entries(terreFaceD[i]).map(([c, d]) => d &&
+            {i > 0 && Object.entries(terreFaceD[i]).map(([c, d]) => d &&
               <path key={`tf-${i}-${c}`} d={d} fill={c} stroke="none" />
             )}
             {i > 0 && terreGradD[i] &&
               <path key={`tg-${i}`} d={terreGradD[i]} fill="url(#ombre-couche)" stroke="none" />
             }
+            {Object.entries(terreSurfD[i]).map(([c, d]) => d &&
+              <path key={`ts-${i}-${c}`} d={d} fill={c} stroke="none"
+                filter={i === 1 ? "url(#relief-shadow)" : undefined} />
+            )}
           </React.Fragment>
         ))}
 
