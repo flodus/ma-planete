@@ -5,7 +5,40 @@ import ExplorateurMondeFictif from './views/ExplorateurMondeFictif';
 import InitScreenLayout from './components/InitScreenLayout';
 import PlanetCanvas from './components/PlanetCanvas';
 import MorphingCanvas from './components/MorphingCanvas';
-import { InitScreenInner } from '../../aria/src/features/init/InitScreen';
+// InitScreenInner local — stub pour la démo (l'original est dans le repo ARIA)
+function InitScreenInner({ worldName, setWorldName, onLaunchLocal, generatingBackground }) {
+  const [progress, setProgress] = React.useState(0)
+  const [lancé, setLancé] = React.useState(false)
+  React.useEffect(() => {
+    if (!lancé) return
+    const id = setInterval(() => setProgress(p => { if (p >= 1) { clearInterval(id); onLaunchLocal(); return 1 } return p + 0.02 }), 40)
+    return () => clearInterval(id)
+  }, [lancé, onLaunchLocal])
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+      minHeight:'100vh', gap:'32px', fontFamily:'monospace', color:'rgba(0,210,255,0.85)' }}>
+      {lancé
+        ? generatingBackground(progress)
+        : <>
+          <div style={{ fontSize:'0.75rem', letterSpacing:'0.35em', textTransform:'uppercase',
+            color:'rgba(0,200,255,0.45)' }}>Ma Planète — prototype</div>
+          <input value={worldName} onChange={e => setWorldName(e.target.value)}
+            placeholder="Nom du monde"
+            style={{ background:'rgba(0,15,35,0.8)', border:'1px solid rgba(0,200,255,0.25)',
+              borderRadius:'4px', padding:'10px 18px', color:'rgba(0,210,255,0.85)',
+              fontFamily:'monospace', fontSize:'0.9rem', letterSpacing:'0.08em', outline:'none', width:'240px' }}/>
+          <button onClick={() => setLancé(true)}
+            style={{ padding:'12px 36px', background:'rgba(0,15,35,0.9)',
+              border:'1px solid rgba(0,200,255,0.4)', borderRadius:'4px',
+              color:'rgba(0,210,255,0.9)', cursor:'pointer',
+              fontFamily:'monospace', fontSize:'0.88rem', letterSpacing:'0.18em', textTransform:'uppercase' }}>
+            Lancer
+          </button>
+        </>
+      }
+    </div>
+  )
+};
 import RadioPlayer from './components/RadioPlayer'
 
 // ─── Écran de choix monde ────────────────────────────────────────────────────
