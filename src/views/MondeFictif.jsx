@@ -85,7 +85,7 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
   const onPtrUp = () => { ptrDown.current = false }
 
   const svgData = useGenerationCarte(localSeed)
-  const { nRoyaumes, paysCentres, nomsPays, biomesPays } = svgData
+  const { nRoyaumes, paysCentres, nomsPays, biomesPays, nHexTerre } = svgData
 
   useEffect(() => {
     if (paysSelectionne == null) return
@@ -136,7 +136,7 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
           : <span style={{ color: 'rgba(0,200,255,0.45)', fontSize: '0.75rem', fontFamily: 'monospace', letterSpacing: '0.08em' }}>{nRoyaumes} royaumes</span>
         }
         <span style={{ color: 'rgba(0,200,255,0.25)', fontSize: '0.68rem', fontFamily: 'monospace' }}>
-          {xf.scale.toFixed(2)}× | {240 * 170} hex
+          {xf.scale.toFixed(2)}× | {nHexTerre?.toLocaleString()} hex terre
         </span>
       </div>
 

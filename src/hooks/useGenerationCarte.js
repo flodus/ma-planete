@@ -62,6 +62,7 @@ export function useGenerationCarte(localSeed) {
     }
     masses.forEach(m => { if (m.length < 60) m.forEach(([c, r]) => { massIdx[r][c] = -1 }) })
     const massesFiltrees = masses.filter(m => m.length >= 60)
+    const nHexTerre = massesFiltrees.reduce((s, m) => s + m.length, 0)
 
     // ─── Assignation pays (voronoï) ───────────────────────────────────────────
     const paysCarte = Array.from({ length: ROWS }, () => new Int16Array(COLS).fill(-1))
@@ -145,13 +146,17 @@ export function useGenerationCarte(localSeed) {
 
         } else {
           const dcVal       = dCote[r][c]
-          const baseCouleur = couleurOcean(dcVal >= 0 ? Math.min(dcVal, 2) : 3)
-          ajout(oceanSurfD[0], baseCouleur, ptsToPath(hexCornersOff(c, r, 0, 0)))
-          const n = nbCouchesOcean(h)
-          for (let i = 1; i <= n; i++) {
-            // Plage (dCote===0) : on saute la première couche de profondeur
-            if (dcVal === 0 && i === 1) continue
-            ajout(oceanSurfD[i], eclairir(baseCouleur, 1 - i * 0.15), ptsToPath(hexCornersOff(c, r, i * DX, i * DY)))
+          // dCote===0 = première rangée d'hexes océan (plage) : on ne la rend pas
+          // Le trait cyan (coteD) suffit à marquer la frontière terre/mer
+          if (dcVal === 0) {
+            // skip — hex de plage invisible
+          } else {
+            const baseCouleur = couleurOcean(dcVal >= 0 ? Math.min(dcVal, 2) : 3)
+            ajout(oceanSurfD[0], baseCouleur, ptsToPath(hexCornersOff(c, r, 0, 0)))
+            const n = nbCouchesOcean(h)
+            for (let i = 1; i <= n; i++) {
+              ajout(oceanSurfD[i], eclairir(baseCouleur, 1 - i * 0.15), ptsToPath(hexCornersOff(c, r, i * DX, i * DY)))
+            }
           }
         }
 
@@ -208,7 +213,7 @@ export function useGenerationCarte(localSeed) {
       terreSurfD, terreFaceD, terreGradD,
       paysD, frontD, coteD: coteSegs.join(''),
       particules, nRoyaumes: nbPays, paysCentres,
-      nomsPays, biomesPays,
+      nomsPays, biomesPays, nHexTerre,
     }
   }, [localSeed])
 }
