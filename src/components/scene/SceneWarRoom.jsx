@@ -1,9 +1,20 @@
 // components/scene/SceneWarRoom.jsx
 import { useRef, useMemo, useEffect } from 'react'
-import { useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { RAYON, PI, lineVertexShader, fondVertexShader, fondFrag, creerTexture } from '../../shaders/globe.js'
-import { extraireSegments, bboxPlanPays } from '../../utils/geo.js'
+import { RAYON, PI, lineVertexShader, fondVertexShader, fondFrag, neonFrag, creerTexture } from '../../shaders/globe.js'
+import { extraireSegments, extraireSegmentsNeon, bboxPlanPays, couleurNeon } from '../../utils/geo.js'
+
+// Vertex shader néon mercator (uTransition=1 → toujours plan, vScan depuis position sphère)
+const neonMorphVert = `
+attribute vec3 aPlane;
+uniform float uTransition;
+varying float vScan;
+void main() {
+  vScan = atan(position.x, position.z);
+  vec3 pos = mix(position, aPlane, uTransition);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+}`
 
 // Recentre la caméra sur le pays sélectionné
 function CentreWarRoom({ features, cfg, groupRef }) {
@@ -20,16 +31,38 @@ function CentreWarRoom({ features, cfg, groupRef }) {
 }
 
 export default function SceneWarRoom({ geoData, cfg }) {
-  const groupRef=useRef()
-  const texture=useMemo(()=>creerTexture(),[])
-  const uFond=useMemo(()=>({uTransition:{value:1},uRadius:{value:RAYON},uTexture:{value:texture}}),[texture])
-  const uMonde=useMemo(()=>({uTransition:{value:1},uRadius:{value:RAYON}}),[])
-  const geoMonde=useMemo(()=>geoData?extraireSegments(geoData.features,null):null,[geoData])
+  const groupRef = useRef()
+  const texture  = useMemo(()=>creerTexture(),[])
+  const uFond    = useMemo(()=>({uTransition:{value:1},uRadius:{value:RAYON},uTexture:{value:texture}}),[texture])
+  const uMonde   = useMemo(()=>({uTransition:{value:1},uRadius:{value:RAYON}}),[])
 
-  const featuresPays=useMemo(()=>{
-    if(!geoData||!cfg)return null
+  const geoMonde = useMemo(()=>geoData?extraireSegments(geoData.features,null):null,[geoData])
+
+  const featuresPays = useMemo(()=>{
+    if(!geoData||!cfg) return null
     return geoData.features.filter(f=>f.properties?.NAME===cfg.NAME)
   },[geoData,cfg])
+
+  // Néon du pays sélectionné (avec mainland si défini)
+  const neonMat = useMemo(()=>{
+    if(!cfg) return null
+    const c = couleurNeon(cfg.NAME)
+    return new THREE.ShaderMaterial({
+      vertexShader: neonMorphVert,
+      fragmentShader: neonFrag(c.r, c.g, c.b),
+      uniforms: { uTime:{value:0}, uTransition:{value:1} },
+      transparent: true, depthWrite: false,
+    })
+  },[cfg])
+
+  const geoNeon = useMemo(()=>{
+    if(!featuresPays?.length||!cfg) return null
+    return extraireSegmentsNeon(featuresPays, cfg.mainland)
+  },[featuresPays, cfg])
+
+  useFrame((_,delta)=>{
+    if(neonMat) neonMat.uniforms.uTime.value += delta
+  })
 
   return (
     <group ref={groupRef}>
@@ -45,6 +78,10 @@ export default function SceneWarRoom({ geoData, cfg }) {
           fragmentShader={`void main(){gl_FragColor=vec4(0.03,0.45,0.70,0.20);}`}
           uniforms={uMonde} transparent depthWrite={false}/>
       </lineSegments>
+    )}
+    {/* Néon pays sélectionné */}
+    {geoNeon && neonMat && (
+      <lineSegments geometry={geoNeon} material={neonMat} renderOrder={10}/>
     )}
     </group>
   )
