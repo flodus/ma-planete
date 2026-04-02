@@ -131,6 +131,14 @@ export function trouverPays(lon, lat, features) {
   return null
 }
 
+export function couleurScan(nom) {
+  if (PAYS_PAR_NOM[nom]?.scan) {
+    const [r, g, b] = PAYS_PAR_NOM[nom].scan
+    return new THREE.Color(r, g, b)
+  }
+  return couleurNeon(nom)
+}
+
 export function couleurNeon(nom) {
   // Pays hardcodés : couleur exacte de pays.json
   if (PAYS_PAR_NOM[nom]) {

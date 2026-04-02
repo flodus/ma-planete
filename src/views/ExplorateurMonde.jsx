@@ -5,7 +5,7 @@ import { Canvas } from '@react-three/fiber'
 import { Stars } from '@react-three/drei'
 import { CURSEUR_POINTER } from '../utils/curseurs.js'
 import { RAYON } from '../shaders/globe.js'
-import { couleurNeon, mainlandDuPays } from '../utils/geo.js'
+import { couleurNeon, couleurScan, mainlandDuPays } from '../utils/geo.js'
 import SceneGlobeMercator, { ResetCameraPlan } from '../components/scene/SceneGlobeMercator.jsx'
 import SceneWarRoom from '../components/scene/SceneWarRoom.jsx'
 import LigneScan from '../components/LigneScan.jsx'
@@ -51,7 +51,7 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
   const geoActuel = estMercator ? geo50 : geo110
   // mainland depuis pays.json si dispo (France, USA…) pour restreindre bbox et néon à la métropole
   const cfg = paysFocus ? { NAME: paysFocus, mainland: mainlandDuPays(paysFocus) } : null
-  const couleurScan = paysFocus ? `#${couleurNeon(paysFocus).getHexString()}` : '#00e5ff'
+  const hexScan = paysFocus ? `#${couleurScan(paysFocus).getHexString()}` : '#00e5ff'
 
   return (
     <div style={{position:'fixed', inset:0, overflow:'hidden', backgroundColor:'#000'}}>
@@ -84,7 +84,7 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
         <Stars radius={130} depth={60} count={45000} factor={5} saturation={0} fade speed={0.2}/>
         <SceneWarRoom geoData={geo10} cfg={cfg}/>
       </Canvas>
-      <LigneScan couleur={couleurScan} />
+      <LigneScan couleur={hexScan} />
       </>
     )}
 
