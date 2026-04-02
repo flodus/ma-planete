@@ -2,10 +2,22 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { RAYON, PI, lineVertexShader, fragMonde, fondVertexShader, fondFrag, creerTexture } from '../../shaders/globe.js'
-import { extraireSegments, trouverPays, couleurNeon } from '../../utils/geo.js'
+import { RAYON, PI, lineVertexShader, fragMonde, fondVertexShader, fondFrag, neonFrag, creerTexture } from '../../shaders/globe.js'
+import { extraireSegments, extraireSegmentsNeon, trouverPays, couleurNeon, estPaysDuJeu, mainlandDuPays } from '../../utils/geo.js'
 import { useGlobeOrbit } from '../../hooks/useGlobeOrbit.js'
 import { useMercatorZoom } from '../../hooks/useMercatorZoom.js'
+import PAYS from '../../data/pays.json'
+
+// Vertex shader néon avec morph sphère → mercator (utilise aPlane de extraireSegmentsNeon)
+const neonMorphVert = `
+attribute vec3 aPlane;
+uniform float uTransition;
+varying float vScan;
+void main() {
+  vScan = atan(position.x, position.z);
+  vec3 pos = mix(position, aPlane, uTransition);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+}`
 
 // Réinitialise la caméra lors du passage en vue mercator
 export function ResetCameraPlan({ actif }) {
@@ -52,13 +64,29 @@ export default function SceneGlobeMercator({
   const uFond=useMemo(()=>({uTransition:{value: mercatorInstantane?1:0},uRadius:{value:RAYON},uTexture:{value:texture}}),[texture]) // eslint-disable-line
   const uMonde=useMemo(()=>({uTransition:{value: mercatorInstantane?1:0},uRadius:{value:RAYON}}),[]); // eslint-disable-line
 
+  // Matériaux néons permanents — 1 par pays hardcodé
+  const neonMats = useRef(null)
+  if (!neonMats.current) {
+    neonMats.current = {}
+    for (const [id, cfg] of Object.entries(PAYS)) {
+      const [r, g, b] = cfg.neon
+      neonMats.current[id] = new THREE.ShaderMaterial({
+        vertexShader: neonMorphVert,
+        fragmentShader: neonFrag(r, g, b),
+        uniforms: { uTime:{value:0}, uTransition:{value:0} },
+        transparent: true, depthWrite: false,
+      })
+    }
+  }
+
+  // Matériau highlight survol (pays hardcodés uniquement)
   const highlightMat=useRef(null)
   if(!highlightMat.current){
     highlightMat.current=new THREE.ShaderMaterial({
       vertexShader:lineVertexShader,
       fragmentShader:`uniform float uTime; uniform vec3 uCouleur;
 void main(){
-  float p=clamp(0.80+0.20*sin(uTime*5.0),0.60,1.0);
+  float p=clamp(0.85+0.15*sin(uTime*6.0),0.70,1.0);
   gl_FragColor=vec4(uCouleur*p,1.0);
 }`,
       uniforms:{
@@ -69,22 +97,39 @@ void main(){
     })
   }
 
-  useEffect(()=>{
-    if(!highlightMat.current) return
-    const c = paysSurvolé ? couleurNeon(paysSurvolé) : new THREE.Color('#ffffff')
-    highlightMat.current.uniforms.uCouleur.value.set(c.r,c.g,c.b)
-  },[paysSurvolé])
-
+  // Géométrie frontières monde
   const geos=useMemo(()=>{
     if(!geoData)return{}
     return { monde: extraireSegments(geoData.features, null) }
   },[geoData])
 
+  // Géométries néons des 10 pays
+  const neonGeos = useMemo(()=>{
+    if(!geoData) return {}
+    return Object.fromEntries(Object.entries(PAYS).map(([id, cfg]) => {
+      const feats = geoData.features.filter(f =>
+        f.properties?.NAME === cfg.NAME || f.properties?.ADMIN === cfg.NAME)
+      return [id, extraireSegmentsNeon(feats, cfg.mainland)]
+    }))
+  },[geoData])
+
+  // Géométrie highlight du pays survolé (hardcodés uniquement, avec mainland)
   const geoHighlight=useMemo(()=>{
-    if(!paysSurvolé||!geoData) return null
-    const feats=geoData.features.filter(f=>f.properties?.NAME===paysSurvolé||f.properties?.ADMIN===paysSurvolé||f.properties?.nom===paysSurvolé)
-    return feats.length ? extraireSegments(feats, null) : null
+    if(!paysSurvolé||!geoData||!estPaysDuJeu(paysSurvolé)) return null
+    const mainland = mainlandDuPays(paysSurvolé)
+    const feats=geoData.features.filter(f=>
+      f.properties?.NAME===paysSurvolé||f.properties?.ADMIN===paysSurvolé)
+    return feats.length ? extraireSegments(feats, mainland) : null
   },[paysSurvolé,geoData])
+
+  // Couleur highlight selon pays survolé
+  useEffect(()=>{
+    if(!highlightMat.current) return
+    if(paysSurvolé && estPaysDuJeu(paysSurvolé)) {
+      const c = couleurNeon(paysSurvolé)
+      highlightMat.current.uniforms.uCouleur.value.set(c.r, c.g, c.b)
+    }
+  },[paysSurvolé])
 
   const globeOrbit = useGlobeOrbit(groupRef, !isPlanar)
 
@@ -96,8 +141,14 @@ void main(){
     uFond.uTransition.value  = t
     uMonde.uTransition.value = t
 
+    // Animer tous les néons + synchro morph
+    for (const mat of Object.values(neonMats.current)) {
+      mat.uniforms.uTime.value       += delta
+      mat.uniforms.uTransition.value  = t
+    }
+
     if (highlightMat.current) {
-      highlightMat.current.uniforms.uTime.value += delta
+      highlightMat.current.uniforms.uTime.value      += delta
       highlightMat.current.uniforms.uTransition.value = t
     }
 
@@ -136,6 +187,12 @@ void main(){
       </lineSegments>
     )}
 
+    {/* Néons permanents des 10 pays hardcodés */}
+    {Object.entries(neonGeos).map(([id, geo]) => geo && (
+      <lineSegments key={id} geometry={geo} material={neonMats.current[id]} renderOrder={10}/>
+    ))}
+
+    {/* Highlight survol (hardcodés uniquement) */}
     {geoHighlight && (
       <lineSegments geometry={geoHighlight} material={highlightMat.current} renderOrder={15}/>
     )}

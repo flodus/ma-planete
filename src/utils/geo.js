@@ -1,6 +1,13 @@
 // utils/geo.js — extraction géométrie GeoJSON, raycasting, couleur néon
 import * as THREE from 'three'
 import { RAYON, PI } from '../shaders/globe.js'
+import PAYS from '../data/pays.json'
+
+// Map NAME → données pays pour les 10 pays hardcodés
+const PAYS_PAR_NOM = Object.fromEntries(Object.values(PAYS).map(p => [p.NAME, p]))
+
+export function estPaysDuJeu(nom) { return !!PAYS_PAR_NOM[nom] }
+export function mainlandDuPays(nom) { return PAYS_PAR_NOM[nom]?.mainland ?? null }
 
 export function extraireSegments(features, mainland) {
   const pts = []
@@ -125,9 +132,14 @@ export function trouverPays(lon, lat, features) {
 }
 
 export function couleurNeon(nom) {
+  // Pays hardcodés : couleur exacte de pays.json
+  if (PAYS_PAR_NOM[nom]) {
+    const [r, g, b] = PAYS_PAR_NOM[nom].neon
+    return new THREE.Color(r, g, b)
+  }
+  // Fallback hash pour les autres pays (évite cyan/bleu proche du fond)
   let h = 0
   for (let i = 0; i < nom.length; i++) h = (h * 31 + nom.charCodeAt(i)) & 0xffff
-  // Éviter 165-265° (cyan / bleu proche du fond monde)
   const zones = [[0, 160], [270, 360]]
   const total = zones.reduce((s,[a,b])=>s+b-a, 0)
   let v = h % total, acc = 0, hue = 0
