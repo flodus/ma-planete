@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { mulberry32 } from '../utils/tectonique.js'
 import { fbm } from '../utils/bruit.js'
 import { COLS, ROWS, VB_W, VB_H, SEUIL_TERRE, DX, DY, voisin, hexCornersOff, hexPath, hexEdge, ptsToPath } from '../utils/hex.js'
-import { biomeCouleur, couleurOcean, shuffler, nbCouchesTerre, eclairir } from '../utils/palette.js'
+import { biomeCouleur, couleurOcean, shuffler, nbCouchesTerre, nbCouchesOcean, eclairir } from '../utils/palette.js'
 
 // ─── Noms procéduraux ─────────────────────────────────────────────────────────
 const SYLLABES = ['ar','el','an','or','en','al','ir','on','eth','un','ath','ul','os','is','ur','im','az','ev','ix','ow']
@@ -145,10 +145,16 @@ export function useGenerationCarte(localSeed) {
           if (p !== -1) paysD[p] = (paysD[p] || '') + hexPath(c, r)
 
         } else {
-          // Océan : surface uniquement, pas de couches de profondeur
+          // Océan : une seule couche par hex — la plus profonde (la plus décalée)
+          // n=0 → layer 0 à (0,0) | n=1 → layer 1 à (+DX,+DY) | n=2 → layer 2 à (+2DX,+2DY)
           const dcVal       = dCote[r][c]
           const baseCouleur = couleurOcean(dcVal >= 0 ? Math.min(dcVal, 2) : 3)
-          ajout(oceanSurfD[0], baseCouleur, ptsToPath(hexCornersOff(c, r, 0, 0)))
+          const n = nbCouchesOcean(h)
+          if (n === 0) {
+            ajout(oceanSurfD[0], baseCouleur, ptsToPath(hexCornersOff(c, r, 0, 0)))
+          } else {
+            ajout(oceanSurfD[n], eclairir(baseCouleur, 1 - n * 0.15), ptsToPath(hexCornersOff(c, r, n * DX, n * DY)))
+          }
         }
 
         for (let k = 0; k < 6; k++) {
