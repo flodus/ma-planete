@@ -54,7 +54,7 @@ function HitboxSphere({ features, onClic, onSurvol, groupRef }) {
 
 export default function SceneGlobeMercator({
   geoData, isPlanar, paysSurvolé, onClickGlobe, onSurvolMercator,
-  onEntrerMercator, mercatorInstantane = false
+  onEntrerMercator, mercatorInstantane = false, fusionsActives = []
 }) {
   const groupRef=useRef()
   const texture=useMemo(()=>creerTexture(),[])
@@ -113,6 +113,28 @@ void main(){
     }))
   },[geoData])
 
+  // Néons des pays fusionnés (dynamiques)
+  const neonFusionMats = useMemo(() =>
+    fusionsActives.map(({ nomFusion }) => {
+      const c = couleurNeon(nomFusion)
+      return new THREE.ShaderMaterial({
+        vertexShader: neonMorphVert,
+        fragmentShader: neonFrag(c.r, c.g, c.b),
+        uniforms: { uTime:{value:0}, uTransition:{value:isPlanar?1:0} },
+        transparent: true, depthWrite: false,
+      })
+    })
+  , [fusionsActives]) // eslint-disable-line
+
+  const neonFusionGeos = useMemo(() => {
+    if (!geoData) return []
+    return fusionsActives.map(({ nomFusion }) => {
+      const feats = geoData.features.filter(f =>
+        f.properties?.NAME === nomFusion || f.properties?.ADMIN === nomFusion)
+      return extraireSegmentsNeon(feats, null)
+    })
+  }, [geoData, fusionsActives])
+
   // Géométrie highlight du pays survolé (hardcodés uniquement, avec mainland)
   const geoHighlight=useMemo(()=>{
     if(!paysSurvolé||!geoData||!estPaysDuJeu(paysSurvolé)) return null
@@ -143,6 +165,10 @@ void main(){
 
     // Animer tous les néons + synchro morph
     for (const mat of Object.values(neonMats.current)) {
+      mat.uniforms.uTime.value       += delta
+      mat.uniforms.uTransition.value  = t
+    }
+    for (const mat of neonFusionMats) {
       mat.uniforms.uTime.value       += delta
       mat.uniforms.uTransition.value  = t
     }
@@ -190,6 +216,11 @@ void main(){
     {/* Néons permanents des 10 pays hardcodés */}
     {Object.entries(neonGeos).map(([id, geo]) => geo && (
       <lineSegments key={id} geometry={geo} material={neonMats.current[id]} renderOrder={10}/>
+    ))}
+
+    {/* Néons pays fusionnés */}
+    {neonFusionGeos.map((geo, i) => geo && (
+      <lineSegments key={`fusion-${i}`} geometry={geo} material={neonFusionMats[i]} renderOrder={10}/>
     ))}
 
     {/* Highlight survol (hardcodés uniquement) */}

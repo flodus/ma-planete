@@ -154,6 +154,7 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
             onSurvolMercator={handleSurvolMercator}
             onEntrerMercator={handleEntrerMercator}
             mercatorInstantane={sansTransition && initialVue === 'mercator'}
+            fusionsActives={fusions}
           />
         </Canvas>
       </div>
