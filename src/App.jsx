@@ -9,11 +9,18 @@ import MorphingCanvas from './components/MorphingCanvas';
 function InitScreenInner({ worldName, setWorldName, onLaunchLocal, generatingBackground }) {
   const [progress, setProgress] = React.useState(0)
   const [lancé, setLancé] = React.useState(false)
+
+  const handleLancer = () => {
+    setLancé(true)
+    onLaunchLocal() // déclenche morphPret immédiatement comme l'original
+  }
+
   React.useEffect(() => {
     if (!lancé) return
-    const id = setInterval(() => setProgress(p => { if (p >= 1) { clearInterval(id); onLaunchLocal(); return 1 } return p + 0.02 }), 40)
+    const id = setInterval(() => setProgress(p => { if (p >= 1) { clearInterval(id); return 1 } return p + 0.02 }), 40)
     return () => clearInterval(id)
-  }, [lancé, onLaunchLocal])
+  }, [lancé])
+
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
       minHeight:'100vh', gap:'32px', fontFamily:'monospace', color:'rgba(0,210,255,0.85)' }}>
@@ -27,7 +34,7 @@ function InitScreenInner({ worldName, setWorldName, onLaunchLocal, generatingBac
             style={{ background:'rgba(0,15,35,0.8)', border:'1px solid rgba(0,200,255,0.25)',
               borderRadius:'4px', padding:'10px 18px', color:'rgba(0,210,255,0.85)',
               fontFamily:'monospace', fontSize:'0.9rem', letterSpacing:'0.08em', outline:'none', width:'240px' }}/>
-          <button onClick={() => setLancé(true)}
+          <button onClick={handleLancer}
             style={{ padding:'12px 36px', background:'rgba(0,15,35,0.9)',
               border:'1px solid rgba(0,200,255,0.4)', borderRadius:'4px',
               color:'rgba(0,210,255,0.9)', cursor:'pointer',
