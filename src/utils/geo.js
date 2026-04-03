@@ -128,8 +128,7 @@ export function appliquerFusions(geoData, fusions) {
     })
     if (feats.length < 2) continue
     try {
-      let merged = feats[0]
-      for (let i = 1; i < feats.length; i++) merged = turf.union(merged, feats[i])
+      let merged = turf.union(turf.featureCollection(feats))
       merged.properties = { ...feats[0].properties, NAME: nomFusion, ADMIN: nomFusion }
       // Retirer les features originales (en partant de la fin pour garder les indices)
       const triés = [...indices].sort((a, b) => b - a)

@@ -188,7 +188,7 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
       {estMercator && !modeFusion && (
         <>
         <button style={ui.btn} onClick={() => changerVue('globe')}>← Globe</button>
-        <button style={{...ui.btn, left:'auto', right:'20px'}}
+        <button style={{...ui.btn, top:'auto', left:'auto', bottom:'20px', right:'20px'}}
           onClick={() => { setModeFusion(true); setFusionA(null); setFusionB(null) }}>
           ⊕ Fusionner
         </button>
@@ -206,8 +206,8 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
         <button style={ui.btn} onClick={annulerFusion}>✕ Annuler</button>
         <div style={ui.ind}>
           {fusionA
-            ? <><span style={{color:'#00e5ff'}}>{fusionA}</span>{' sélectionné — clic sur un 2e pays'}</>
-            : 'clic sur le 1er pays à fusionner'
+            ? <><span style={{color:'#00e5ff'}}>{fusionA}</span>{' sélectionné — double-clic sur un 2e pays'}</>
+            : 'double-clic sur le 1er pays à fusionner'
           }
         </div>
         </>
