@@ -1,7 +1,7 @@
 // src/App.jsx
-import React, { useState, useRef } from 'react';
-import { ExplorateurMonde } from './views/ExplorateurMonde';
-import ExplorateurMondeFictif from './views/ExplorateurMondeFictif';
+import React, { useState, useRef, lazy, Suspense } from 'react';
+const ExplorateurMonde    = lazy(() => import('./views/ExplorateurMonde').then(m => ({ default: m.ExplorateurMonde })))
+const ExplorateurMondeFictif = lazy(() => import('./views/ExplorateurMondeFictif'))
 import InitScreenLayout from './components/InitScreenLayout';
 import PlanetCanvas from './components/PlanetCanvas';
 import MorphingCanvas from './components/MorphingCanvas';
@@ -150,7 +150,9 @@ export default function App() {
 
   return (
     <>
-    {getMainContent()}
+    <Suspense fallback={null}>
+      {getMainContent()}
+    </Suspense>
     <RadioPlayer />  {/* RadioPlayer est TOUJOURS monté */}
     </>
   );

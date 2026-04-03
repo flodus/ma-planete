@@ -1,7 +1,8 @@
 // src/views/ExplorateurMondeFictif.jsx
 import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Stars, OrbitControls } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
+import Etoiles from '../components/Etoiles.jsx'
 import { CURSEUR_POINTER } from '../utils/curseurs.js'
 import { RAYON_GLOBE } from '../hooks/useHexagonesGlobe.js'
 import GlobeFictif from '../components/scene/GlobeFictif.jsx'
@@ -39,7 +40,7 @@ export default function ExplorateurMondeFictif({ seed = 42, onMondeReel }) {
 
       <Canvas camera={{ position: [0, 0, RAYON_GLOBE * 4.2], fov: 42 }}>
         <color attach="background" args={['#010108']} />
-        <Stars radius={150} depth={70} count={50000} factor={5} saturation={0.2} fade speed={0.3} />
+        <Etoiles count={50000} rayon={150} />
         <GlobeFictif seed={localSeed} />
         <OrbitControls enableZoom enablePan={false} rotateSpeed={0.8} zoomSpeed={1.0} />
       </Canvas>

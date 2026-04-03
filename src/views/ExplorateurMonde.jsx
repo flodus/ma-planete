@@ -2,7 +2,7 @@
 // Globe GeoJSON → Mercator → WarRoom pays
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Stars } from '@react-three/drei'
+import Etoiles from '../components/Etoiles.jsx'
 import { CURSEUR_POINTER } from '../utils/curseurs.js'
 import { RAYON } from '../shaders/globe.js'
 import { couleurNeon, couleurScan, mainlandDuPays, appliquerFusions } from '../utils/geo.js'
@@ -144,7 +144,7 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
         <Canvas camera={{position:[0,0,RAYON*3], fov:45}}>
           <color attach="background" args={['#020208']}/>
           <ambientLight intensity={0.15}/>
-          <Stars radius={130} depth={60} count={45000} factor={5} saturation={0} fade speed={0.4}/>
+          <Etoiles />
           <ResetCameraPlan actif={estMercator}/>
           <SceneGlobeMercator
             geoData={geoActuel}
@@ -165,7 +165,7 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
       <Canvas camera={{position:[0,0,RAYON*3], fov:45}}>
         <color attach="background" args={['#020208']}/>
         <ambientLight intensity={0.1}/>
-        <Stars radius={130} depth={60} count={45000} factor={5} saturation={0} fade speed={0.2}/>
+        <Etoiles opacite={0.4} />
         <SceneWarRoom geoData={geo10mod} cfg={cfg}/>
       </Canvas>
       <LigneScan couleur={hexScan} />

@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
+import Etoiles from './Etoiles.jsx';
 import * as THREE from 'three';
 import { CURSEUR_DEFAUT } from '../utils/curseurs.js';
 import { lineVertexShader, fragMonde, fondVertexShader, fondFrag, neonVertexShader, neonFrag, creerTexture } from '../shaders/globe.js';
@@ -97,7 +97,7 @@ export default function PlanetCanvas() {
     >
       <color attach="background" args={['#020208']}/>
       <ambientLight intensity={0.1}/>
-      <Stars radius={130} depth={60} count={45000} factor={5} saturation={0} fade speed={0.3}/>
+      <Etoiles />
       <ScenePlanet geoData={geoData}/>
     </Canvas>
   );
