@@ -33,9 +33,10 @@ export function ExplorateurMonde({ initialVue = 'globe', sansTransition = false 
   const [geo10,  setGeo10]  = useState(null)
 
   useEffect(()=>{
-    fetch('/geojson/ne_110m_admin_0_countries.geojson').then(r=>r.json()).then(setGeo110).catch(console.error)
-    fetch('/geojson/ne_50m_admin_0_countries.geojson').then(r=>r.json()).then(setGeo50).catch(console.error)
-    fetch('/geojson/ne_10m_admin_0_countries.geojson').then(r=>r.json()).then(setGeo10).catch(console.error)
+    const base = import.meta.env.BASE_URL
+    fetch(`${base}geojson/ne_110m_admin_0_countries.geojson`).then(r=>r.json()).then(setGeo110).catch(console.error)
+    fetch(`${base}geojson/ne_50m_admin_0_countries.geojson`).then(r=>r.json()).then(setGeo50).catch(console.error)
+    fetch(`${base}geojson/ne_10m_admin_0_countries.geojson`).then(r=>r.json()).then(setGeo10).catch(console.error)
   },[])
 
   const changerVue = useCallback((v) => {
