@@ -1,5 +1,6 @@
 // utils/geo.js — extraction géométrie GeoJSON, raycasting, couleur néon
 import * as THREE from 'three'
+import * as turf from '@turf/turf'
 import { RAYON, PI } from '../shaders/globe.js'
 import PAYS from '../data/pays.json'
 
@@ -110,6 +111,35 @@ export function bboxPlanPays(features, mainland) {
     }))
   })
   return { cx:(xMin+xMax)/2, cy:(yMin+yMax)/2, w:xMax-xMin, h:yMax-yMin }
+}
+
+// Applique une liste de fusions à un GeoJSON FeatureCollection
+// fusions = [{ noms: ['France', 'Germany'], nomFusion: 'Europe centrale' }, ...]
+export function appliquerFusions(geoData, fusions) {
+  if (!geoData || !fusions.length) return geoData
+  let features = [...geoData.features]
+  for (const { noms, nomFusion } of fusions) {
+    const indices = []
+    const feats = []
+    noms.forEach(nom => {
+      const idx = features.findIndex(f =>
+        f.properties?.NAME === nom || f.properties?.ADMIN === nom)
+      if (idx !== -1) { indices.push(idx); feats.push(features[idx]) }
+    })
+    if (feats.length < 2) continue
+    try {
+      let merged = feats[0]
+      for (let i = 1; i < feats.length; i++) merged = turf.union(merged, feats[i])
+      merged.properties = { ...feats[0].properties, NAME: nomFusion, ADMIN: nomFusion }
+      // Retirer les features originales (en partant de la fin pour garder les indices)
+      const triés = [...indices].sort((a, b) => b - a)
+      triés.forEach(i => features.splice(i, 1))
+      features.push(merged)
+    } catch (e) {
+      console.warn('Fusion échouée pour', noms, e)
+    }
+  }
+  return { ...geoData, features }
 }
 
 export function pointDansRing(x, y, ring) {
