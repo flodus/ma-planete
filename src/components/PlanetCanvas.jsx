@@ -9,7 +9,8 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import Etoiles from './Etoiles.jsx';
 import * as THREE from 'three';
 import { CURSEUR_DEFAUT } from '../utils/curseurs.js';
-import { lineVertexShader, fragMonde, fondVertexShader, fondFrag, neonVertexShader, neonFrag, creerTexture } from '../shaders/globe.js';
+import { lineVertexShader, fragMonde, neonVertexShader, neonFrag } from '../shaders/globe.js';
+import SphereBase from './scene/SphereBase.jsx';
 import { extraireSegments, extraireSegmentsNeon } from '../utils/geo.js';
 import PAYS from '../data/pays.json';
 
@@ -23,8 +24,6 @@ const NEON_COLORS = Object.fromEntries(
 // ─── Scène globe décoratif ────────────────────────────────────────────────────
 function ScenePlanet({ geoData }) {
   const groupRef = useRef();
-  const texture  = useMemo(() => creerTexture(), []);
-  const uGlobe   = useMemo(() => ({ uTransition:{value:0}, uRadius:{value:RAYON}, uTexture:{value:texture} }), [texture]);
   const uMonde   = useMemo(() => ({ uTransition:{value:0}, uRadius:{value:RAYON} }), []);
 
   const neonMats = useRef(null);
@@ -62,11 +61,7 @@ function ScenePlanet({ geoData }) {
 
   return (
     <group ref={groupRef}>
-      <mesh renderOrder={0}>
-        <planeGeometry args={[RAYON*2*PI, RAYON*PI, 64, 32]}/>
-        <shaderMaterial vertexShader={fondVertexShader} fragmentShader={fondFrag}
-          uniforms={uGlobe} side={THREE.DoubleSide}/>
-      </mesh>
+      <SphereBase rayon={RAYON} />
       {geos.monde && (
         <lineSegments geometry={geos.monde} renderOrder={1}>
           <shaderMaterial vertexShader={lineVertexShader} fragmentShader={fragMonde}

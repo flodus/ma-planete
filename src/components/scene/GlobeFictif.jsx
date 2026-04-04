@@ -2,14 +2,14 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { neonVertexShader, creerTexture } from '../../shaders/globe.js'
+import { neonVertexShader } from '../../shaders/globe.js'
 import { useContoursFictifs } from '../../hooks/useContoursFictifs.js'
 import { RAYON_GLOBE } from '../../hooks/useHexagonesGlobe.js'
+import SphereBase from './SphereBase.jsx'
 
 export default function GlobeFictif({ seed }) {
   const groupRef = useRef()
   const contours  = useContoursFictifs(seed)
-  const texture   = useMemo(() => creerTexture(), [])
 
   // Matériau néon unique — même bleu cyan que le globe réel
   const neonMat = useMemo(() => new THREE.ShaderMaterial({
@@ -27,11 +27,8 @@ void main(){ float p=clamp(0.25+0.15*sin(vScan-uTime*0.5),0.10,0.40); gl_FragCol
 
   return (
     <group ref={groupRef}>
-      {/* Sphère — texture non éclairée comme le globe réel */}
-      <mesh>
-        <sphereGeometry args={[RAYON_GLOBE - 0.02, 64, 32]} />
-        <meshBasicMaterial map={texture} />
-      </mesh>
+      {/* Sphère — même rendu que le globe réel (source de vérité : SphereBase) */}
+      <SphereBase rayon={RAYON_GLOBE} />
 
       {/* Contours néon des royaumes */}
       {contours.map(({ id, geo }) => (
