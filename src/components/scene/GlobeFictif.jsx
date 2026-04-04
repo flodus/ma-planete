@@ -1,4 +1,4 @@
-// components/scene/GlobeFictif.jsx — globe 3D avec hexagones procéduraux
+// components/scene/GlobeFictif.jsx — globe fictif : sphère texturée + 1 mesh hex mergé
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -6,7 +6,6 @@ import { fbm } from '../../utils/bruit.js'
 import { SEUIL_TERRE } from '../../utils/hex.js'
 import { useHexagonesGlobe, RAYON_GLOBE } from '../../hooks/useHexagonesGlobe.js'
 
-// Texture equirectangulaire cohérente avec la carte hex (même seed = même géographie)
 function creerTextureFictive(seed) {
   const W = 1024, H = 512
   const canvas = document.createElement('canvas')
@@ -38,26 +37,30 @@ function creerTextureFictive(seed) {
 }
 
 export default function GlobeFictif({ seed }) {
-  const groupRef  = useRef()
-  const oceanTexture = useMemo(() => creerTextureFictive(seed), [seed])
-  const hexMeshes    = useHexagonesGlobe(seed)
+  const groupRef = useRef()
+  const hexMesh  = useHexagonesGlobe(seed)
+  const texture  = useMemo(() => creerTextureFictive(seed), [seed])
 
   useFrame((_, delta) => {
     if (groupRef.current) groupRef.current.rotation.y += delta * 0.006
   })
 
   return (
-    <>
+    <group ref={groupRef}>
+      {/* Sphère de base — ambiance sombre avec léger emissive pour éviter le noir total */}
       <mesh>
-        <sphereGeometry args={[RAYON_GLOBE - 0.02, 128, 64]} />
-        <meshStandardMaterial map={oceanTexture} roughness={0.4} metalness={0.2} color="#1a5a8a" />
+        <sphereGeometry args={[RAYON_GLOBE - 0.02, 64, 32]} />
+        <meshStandardMaterial
+          map={texture}
+          roughness={0.85} metalness={0.0}
+          emissive={new THREE.Color(0x020510)} emissiveIntensity={0.5}
+        />
       </mesh>
-      <group ref={groupRef}>
-        {hexMeshes.map((mesh, idx) => <primitive key={idx} object={mesh} />)}
-      </group>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[8, 12, 6]} intensity={1.0} color="#fff5e8" />
-      <pointLight position={[-5, 4, 6]} intensity={0.5} color="#88aaff" />
-    </>
+      {/* Hexagones terre — un seul mesh fusionné */}
+      {hexMesh && <primitive object={hexMesh} />}
+      {/* Lumières douces comme le globe réel */}
+      <ambientLight intensity={0.15} />
+      <directionalLight position={[5, 3, 5]} intensity={0.5} color="#c8d8ff" />
+    </group>
   )
 }

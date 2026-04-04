@@ -35,11 +35,11 @@ export default function ExplorateurMondeFictif({ seed = 42, onMondeReel }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', backgroundColor: '#010108' }}
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', backgroundColor: '#020208' }}
       onDoubleClick={() => setVue('mercator')}>
 
       <Canvas camera={{ position: [0, 0, RAYON_GLOBE * 4.2], fov: 42 }}>
-        <color attach="background" args={['#010108']} />
+        <color attach="background" args={['#020208']} />
         <Etoiles count={50000} rayon={150} />
         <GlobeFictif seed={localSeed} />
         <OrbitControls enableZoom enablePan={false} rotateSpeed={0.8} zoomSpeed={1.0} />

@@ -37,7 +37,6 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
   useEffect(() => {
     let lastTime = performance.now()
     function animateClouds(now) {
-      if (now - lastTime < 33) { cloudAnimRef.current = requestAnimationFrame(animateClouds); return }
       const delta = Math.min(0.05, (now - lastTime) / 1000)
       lastTime = now
       tempsRef.current += delta * 0.5
@@ -112,7 +111,8 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
     <div ref={wrapRef}
       style={{ position: 'fixed', inset: 0, overflow: 'hidden',
         backgroundColor: '#061628', cursor: 'grab', userSelect: 'none' }}
-      onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp}>
+      onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp}
+      onDoubleClick={() => { if (hoveredPays !== null) onPaysDoubleClick?.(hoveredPays) }}>
 
       {/* Toolbar */}
       <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10,

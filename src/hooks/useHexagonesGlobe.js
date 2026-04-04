@@ -1,24 +1,12 @@
-// hooks/useHexagonesGlobe.js — génération des hexagones 3D sur le globe fictif
+// hooks/useHexagonesGlobe.js — globe fictif : un seul mesh mergé, plein résolution
 import { useState, useEffect } from 'react'
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { fbm } from '../utils/bruit.js'
-import { SEUIL_TERRE } from '../utils/hex.js'
-
-// Résolution réduite pour le globe décoratif (÷4 sur chaque axe = ÷16 cellules)
-const COLS = 60
-const ROWS = 42
-
-function voisin(col, row, k) {
-  const D = [
-    [[0,-1],[1,0],[0,1],[-1,1],[-1,0],[-1,-1]],
-    [[1,-1],[1,0],[1,1],[0,1], [-1,0],[0,-1] ],
-  ]
-  const [dc, dr] = D[row % 2][k]
-  return [col + dc, row + dr]
-}
+import { COLS, ROWS, SEUIL_TERRE, voisin } from '../utils/hex.js'
 import { biomeCouleur } from '../utils/palette.js'
 
-const RAYON_GLOBE = 3.8
+export const RAYON_GLOBE = 3.8
 const PI = Math.PI
 
 function lonLatToXYZ(lon, lat, radius) {
@@ -31,57 +19,51 @@ function lonLatToXYZ(lon, lat, radius) {
   ]
 }
 
-function createHexagonMesh(lon, lat, color) {
-  const [cx, cy, cz] = lonLatToXYZ(lon, lat, RAYON_GLOBE + 0.025)
-  const axis = new THREE.Vector3(cx, cy, cz).normalize()
-  const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis)
+// Hexagone plat (ShapeGeometry) positionné sur la sphère avec vertex colors
+function hexGeoSphere(lon, lat, hexColor) {
+  const [cx, cy, cz] = lonLatToXYZ(lon, lat, RAYON_GLOBE + 0.03)
 
   const shape = new THREE.Shape()
-  const hexRadius = 0.19
+  const r = 0.055  // rayon hex adapté à plein résolution
   for (let i = 0; i < 6; i++) {
-    const angle = -PI / 2 + i * PI * 2 / 6
-    const x = Math.cos(angle) * hexRadius
-    const y = Math.sin(angle) * hexRadius
-    if (i === 0) shape.moveTo(x, y); else shape.lineTo(x, y)
+    const a = -PI / 2 + i * PI / 3
+    if (i === 0) shape.moveTo(Math.cos(a) * r, Math.sin(a) * r)
+    else         shape.lineTo(Math.cos(a) * r, Math.sin(a) * r)
   }
   shape.closePath()
+  const geo = new THREE.ShapeGeometry(shape, 1)
 
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    steps: 1, depth: 0.04,
-    bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 2,
-  })
-  geometry.computeVertexNormals()
-  geometry.rotateX(PI / 2)
-  geometry.rotateZ(PI)
+  // Orienter vers la surface de la sphère
+  const axis = new THREE.Vector3(cx, cy, cz).normalize()
+  const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), axis)
+  const mat  = new THREE.Matrix4().makeRotationFromQuaternion(quat)
+  mat.setPosition(cx, cy, cz)
+  geo.applyMatrix4(mat)
 
-  geometry.computeBoundingBox()
-  const box = geometry.boundingBox
-  geometry.translate(
-    -(box.min.x + box.max.x) / 2,
-    -(box.min.y + box.max.y) / 2,
-    -(box.min.z + box.max.z) / 2,
-  )
+  // Vertex colors
+  const n = geo.attributes.position.count
+  const cols = new Float32Array(n * 3)
+  const c = new THREE.Color(hexColor)
+  for (let i = 0; i < n; i++) { cols[i*3]=c.r; cols[i*3+1]=c.g; cols[i*3+2]=c.b }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3))
 
-  const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
-    color, roughness: 0.5, metalness: 0.1,
-  }))
-  mesh.position.set(cx, cy, cz)
-  mesh.quaternion.copy(quaternion)
-  return mesh
+  return geo
 }
 
+// Retourne { mesh } — un seul Mesh fusionné pour tout le globe
 export function useHexagonesGlobe(seed) {
-  const [hexMeshes, setHexMeshes] = useState([])
+  const [mesh, setMesh] = useState(null)
 
   useEffect(() => {
     const heights = Array.from({ length: ROWS }, (_, r) =>
       Array.from({ length: COLS }, (_, c) => {
         const h    = fbm(c / COLS * 3.8, r / ROWS * 3.8, seed)
-        const fade = Math.min(1, c / 6, (COLS - 1 - c) / 6, r / 4, (ROWS - 1 - r) / 4)
+        const fade = Math.min(1, c / 25, (COLS-1-c) / 25, r / 15, (ROWS-1-r) / 15)
         return h * fade
       })
     )
 
+    // Filtrer les petites masses (îlots isolés)
     const massIdx = Array.from({ length: ROWS }, () => new Int16Array(COLS).fill(-1))
     const masses  = []
     for (let r = 0; r < ROWS; r++) {
@@ -103,21 +85,29 @@ export function useHexagonesGlobe(seed) {
         masses.push(masse)
       }
     }
-    masses.forEach(m => { if (m.length < 4) m.forEach(([c, r]) => { massIdx[r][c] = -1 }) })
+    masses.forEach(m => { if (m.length < 60) m.forEach(([c, r]) => { massIdx[r][c] = -1 }) })
 
-    const meshes = []
+    // Construire toutes les géométries hexagonales
+    const geos = []
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         if (massIdx[r][c] === -1) continue
         const lon = (c / COLS) * 360 - 180
         const lat = 90 - (r / ROWS) * 180
-        try { meshes.push(createHexagonMesh(lon, lat, biomeCouleur(heights[r][c]))) } catch (e) {}
+        try { geos.push(hexGeoSphere(lon, lat, biomeCouleur(heights[r][c]))) } catch {}
       }
     }
-    setHexMeshes(meshes)
+
+    if (!geos.length) return
+
+    const merged = mergeGeometries(geos, false)
+    geos.forEach(g => g.dispose())
+
+    const m = new THREE.Mesh(merged, new THREE.MeshStandardMaterial({
+      vertexColors: true, roughness: 0.6, metalness: 0.05,
+    }))
+    setMesh(m)
   }, [seed])
 
-  return hexMeshes
+  return mesh
 }
-
-export { RAYON_GLOBE }
