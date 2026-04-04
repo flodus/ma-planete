@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { fbm } from '../utils/bruit.js'
 import { mulberry32 } from '../utils/tectonique.js'
 import { COLS, ROWS, VB_W, VB_H, SEUIL_TERRE, voisin, hexCorners } from '../utils/hex.js'
-import { neonPays, shuffler } from '../utils/palette.js'
+import { shuffler } from '../utils/palette.js'
 import { RAYON_GLOBE } from './useHexagonesGlobe.js'
 
 const PI = Math.PI
@@ -80,51 +80,35 @@ export function useContoursFictifs(seed) {
       }
     })
 
-    // ─── Extraction des arêtes frontières/côtes par royaume ───────────────────
-    // segsByPays[id] = Float32Array points (x0,y0,z0, x1,y1,z1, ...)
-    const segsByPays = {}
+    // ─── Extraction de toutes les arêtes frontières/côtes (géométrie unique) ──
+    const pts = []
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const p = paysCarte[r][c]
         if (p === -1) continue
-        const hexId  = r * COLS + c
-        const coins  = hexCorners(c, r)
+        const hexId = r * COLS + c
+        const coins = hexCorners(c, r)
         for (let k = 0; k < 6; k++) {
           const [nc, nr] = voisin(c, r, k)
           const inB      = nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS
           const nId      = inB ? nr * COLS + nc : -1
-          // Traiter chaque arête une seule fois (hex avec id inférieur)
+          // Traiter chaque arête une seule fois
           if (inB && hexId > nId) continue
           const nP = inB ? paysCarte[nr][nc] : -1
           if (p === nP) continue // même royaume → pas de frontière
-          // Convertir les 2 coins de l'arête en coords 3D sphère
           const [x0, y0] = coins[k]
           const [x1, y1] = coins[(k + 1) % 6]
-          const s0 = svgVersSphere(x0, y0)
-          const s1 = svgVersSphere(x1, y1)
-          if (!segsByPays[p]) segsByPays[p] = []
-          segsByPays[p].push(...s0, ...s1)
-          // Côte côté voisin (autre royaume) → ajouter aussi à nP
-          if (nP !== -1) {
-            if (!segsByPays[nP]) segsByPays[nP] = []
-            segsByPays[nP].push(...s0, ...s1)
-          }
+          pts.push(...svgVersSphere(x0, y0), ...svgVersSphere(x1, y1))
         }
       }
     }
 
-    // ─── Construire les BufferGeometry par royaume ────────────────────────────
-    const result = Object.entries(segsByPays).map(([idStr, pts]) => {
-      const id  = Number(idStr)
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3))
-      return { id, geo, couleur: neonPays(id) }
-    })
+    // ─── Construire une seule BufferGeometry pour tous les contours ───────────
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3))
+    const result = [{ id: 0, geo }]
 
-    setContours(prev => {
-      prev.forEach(({ geo }) => geo.dispose())
-      return result
-    })
+    setContours(prev => { prev.forEach(({ geo }) => geo.dispose()); return result })
   }, [seed])
 
   return contours

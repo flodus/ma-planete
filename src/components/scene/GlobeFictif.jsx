@@ -2,7 +2,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { neonVertexShader, neonFrag, creerTexture } from '../../shaders/globe.js'
+import { neonVertexShader, creerTexture } from '../../shaders/globe.js'
 import { useContoursFictifs } from '../../hooks/useContoursFictifs.js'
 import { RAYON_GLOBE } from '../../hooks/useHexagonesGlobe.js'
 
@@ -11,23 +11,18 @@ export default function GlobeFictif({ seed }) {
   const contours  = useContoursFictifs(seed)
   const texture   = useMemo(() => creerTexture(), [])
 
-  // Matériaux néon — un par royaume, recréés quand les contours changent
-  const mats = useMemo(() =>
-    contours.map(({ couleur }) => {
-      const c = new THREE.Color(couleur)
-      return new THREE.ShaderMaterial({
-        vertexShader:   neonVertexShader,
-        fragmentShader: neonFrag(c.r.toFixed(4), c.g.toFixed(4), c.b.toFixed(4)),
-        uniforms:       { uTime: { value: 0 } },
-        transparent:    true,
-        depthWrite:     false,
-      })
-    })
-  , [contours])
+  // Matériau néon unique — même bleu cyan que le globe réel
+  const neonMat = useMemo(() => new THREE.ShaderMaterial({
+    vertexShader:   neonVertexShader,
+    fragmentShader: `uniform float uTime; varying float vScan;
+void main(){ float p=clamp(0.25+0.15*sin(vScan-uTime*0.5),0.10,0.40); gl_FragColor=vec4(0.03,0.55,0.80,p); }`,
+    uniforms:  { uTime: { value: 0 } },
+    transparent: true, depthWrite: false,
+  }), [])
 
   useFrame((_, delta) => {
     if (groupRef.current) groupRef.current.rotation.y += delta * 0.006
-    mats.forEach(mat => { mat.uniforms.uTime.value += delta })
+    neonMat.uniforms.uTime.value += delta
   })
 
   return (
@@ -43,8 +38,8 @@ export default function GlobeFictif({ seed }) {
       </mesh>
 
       {/* Contours néon des royaumes */}
-      {contours.map(({ id, geo }, i) => mats[i] && (
-        <lineSegments key={id} geometry={geo} material={mats[i]} renderOrder={10} />
+      {contours.map(({ id, geo }) => (
+        <lineSegments key={id} geometry={geo} material={neonMat} renderOrder={10} />
       ))}
 
       {/* Lumières douces */}
