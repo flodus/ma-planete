@@ -27,24 +27,16 @@ void main(){ float p=clamp(0.25+0.15*sin(vScan-uTime*0.5),0.10,0.40); gl_FragCol
 
   return (
     <group ref={groupRef}>
-      {/* Sphère sombre — occultation + ambiance, quasi invisible */}
+      {/* Sphère — texture non éclairée comme le globe réel */}
       <mesh>
         <sphereGeometry args={[RAYON_GLOBE - 0.02, 64, 32]} />
-        <meshStandardMaterial
-          map={texture}
-          roughness={0.9} metalness={0.0}
-          emissive={new THREE.Color(0x010204)} emissiveIntensity={0.6}
-        />
+        <meshBasicMaterial map={texture} />
       </mesh>
 
       {/* Contours néon des royaumes */}
       {contours.map(({ id, geo }) => (
         <lineSegments key={id} geometry={geo} material={neonMat} renderOrder={10} />
       ))}
-
-      {/* Lumières douces */}
-      <ambientLight intensity={0.15} />
-      <directionalLight position={[5, 3, 5]} intensity={0.5} color="#c8d8ff" />
     </group>
   )
 }
