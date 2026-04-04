@@ -2,13 +2,14 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { neonVertexShader, neonFrag } from '../../shaders/globe.js'
+import { neonVertexShader, neonFrag, creerTexture } from '../../shaders/globe.js'
 import { useContoursFictifs } from '../../hooks/useContoursFictifs.js'
 import { RAYON_GLOBE } from '../../hooks/useHexagonesGlobe.js'
 
 export default function GlobeFictif({ seed }) {
   const groupRef = useRef()
   const contours  = useContoursFictifs(seed)
+  const texture   = useMemo(() => creerTexture(), [])
 
   // Matériaux néon — un par royaume, recréés quand les contours changent
   const mats = useMemo(() =>
@@ -35,9 +36,9 @@ export default function GlobeFictif({ seed }) {
       <mesh>
         <sphereGeometry args={[RAYON_GLOBE - 0.02, 64, 32]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x020508)}
-          roughness={1.0} metalness={0.0}
-          emissive={new THREE.Color(0x010204)} emissiveIntensity={1.0}
+          map={texture}
+          roughness={0.9} metalness={0.0}
+          emissive={new THREE.Color(0x010204)} emissiveIntensity={0.6}
         />
       </mesh>
 
