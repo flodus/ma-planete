@@ -1,11 +1,12 @@
 // components/CarteSVG.jsx — rendu SVG de la carte hex fictive
-// React.memo : ne re-render que si xf/svgData/lod/hover changent, jamais pour les nuages
-import React, { memo } from 'react'
+import React from 'react'
 import { VB_W, VB_H, hexCenter } from '../utils/hex.js'
 import { neonPays } from '../utils/palette.js'
+import { createCloudPath } from '../utils/nuages.js'
 
-const CarteSVG = memo(function CarteSVG({
+export default function CarteSVG({
   xf, svgData, lod,
+  nuages, cloudOffset, nuagesVisibles, nuagesOpacity,
   hoveredPays, setHoveredPays, onPaysDoubleClick,
 }) {
   const { oceanSurfD, oceanFaceD, oceanGradD,
@@ -126,10 +127,19 @@ const CarteSVG = memo(function CarteSVG({
           )
         })}
 
+        {/* Nuages */}
+        {nuagesVisibles && nuages.map((cloud) => {
+          const xPos = (cloud.baseX + cloudOffset * cloud.currentSpeed * 80) % (VB_W + 500) - 250
+          return (
+            <path key={`cloud-${cloud.id}`}
+              d={createCloudPath(xPos, cloud.currentY, cloud.currentSize)}
+              fill={`rgba(245, 248, 255, ${cloud.currentOpacity * nuagesOpacity})`}
+              stroke="none"
+              style={{ pointerEvents: 'none' }} />
+          )
+        })}
 
       </svg>
     </div>
   )
-})
-
-export default CarteSVG
+}
