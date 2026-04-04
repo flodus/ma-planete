@@ -2,8 +2,9 @@
 export const NUAGES_VISIBLE_MAX_SCALE = 1.5
 
 export function genererNuages(largeur, hauteur) {
+  const count = Math.floor(Math.random() * 16) + 15  // 15 à 30
   const nuages = []
-  for (let i = 0; i < 45; i++) {
+  for (let i = 0; i < count; i++) {
     let baseSize
     const rand = Math.random()
     if (rand < 0.4)      baseSize = 20 + Math.random() * 15

@@ -1,12 +1,11 @@
 // components/CarteSVG.jsx — rendu SVG de la carte hex fictive
-import React from 'react'
+// React.memo : ne re-render que si xf/svgData/lod/hover changent, jamais pour les nuages
+import React, { memo } from 'react'
 import { VB_W, VB_H, hexCenter } from '../utils/hex.js'
 import { neonPays } from '../utils/palette.js'
-import { createCloudPath } from '../utils/nuages.js'
 
-export default function CarteSVG({
+const CarteSVG = memo(function CarteSVG({
   xf, svgData, lod,
-  nuages, cloudOffset, nuagesVisibles, nuagesOpacity,
   hoveredPays, setHoveredPays, onPaysDoubleClick,
 }) {
   const { oceanSurfD, oceanFaceD, oceanGradD,
@@ -33,9 +32,6 @@ export default function CarteSVG({
           </linearGradient>
           <filter id="pays-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="2"/>
-          </filter>
-          <filter id="cloud-blur" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3"/>
           </filter>
           <filter id="relief-shadow" x="-0.5" y="-0.5" width="2" height="2">
             <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
@@ -130,19 +126,10 @@ export default function CarteSVG({
           )
         })}
 
-        {/* Nuages */}
-        {nuagesVisibles && nuages.map((cloud) => {
-          const xPos = (cloud.baseX + cloudOffset * cloud.currentSpeed * 80) % (VB_W + 500) - 250
-          return (
-            <path key={`cloud-${cloud.id}`}
-              d={createCloudPath(xPos, cloud.currentY, cloud.currentSize)}
-              fill={`rgba(245, 248, 255, ${cloud.currentOpacity * nuagesOpacity})`}
-              filter="url(#cloud-blur)" stroke="none"
-              style={{ pointerEvents: 'none' }} />
-          )
-        })}
 
       </svg>
     </div>
   )
-}
+})
+
+export default CarteSVG
