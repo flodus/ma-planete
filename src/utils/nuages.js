@@ -1,5 +1,5 @@
 // utils/nuages.js — génération et rendu des nuages SVG
-export const NUAGES_VISIBLE_MAX_SCALE = 1.5
+export const NUAGES_VISIBLE_MAX_SCALE = 0.8
 
 export function genererNuages(largeur, hauteur) {
   const count = Math.floor(Math.random() * 16) + 15  // 15 à 30

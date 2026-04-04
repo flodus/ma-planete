@@ -2,7 +2,20 @@
 import { useState, useEffect } from 'react'
 import * as THREE from 'three'
 import { fbm } from '../utils/bruit.js'
-import { COLS, ROWS, SEUIL_TERRE, voisin } from '../utils/hex.js'
+import { SEUIL_TERRE } from '../utils/hex.js'
+
+// Résolution réduite pour le globe décoratif (÷4 sur chaque axe = ÷16 cellules)
+const COLS = 60
+const ROWS = 42
+
+function voisin(col, row, k) {
+  const D = [
+    [[0,-1],[1,0],[0,1],[-1,1],[-1,0],[-1,-1]],
+    [[1,-1],[1,0],[1,1],[0,1], [-1,0],[0,-1] ],
+  ]
+  const [dc, dr] = D[row % 2][k]
+  return [col + dc, row + dr]
+}
 import { biomeCouleur } from '../utils/palette.js'
 
 const RAYON_GLOBE = 3.8
@@ -64,7 +77,7 @@ export function useHexagonesGlobe(seed) {
     const heights = Array.from({ length: ROWS }, (_, r) =>
       Array.from({ length: COLS }, (_, c) => {
         const h    = fbm(c / COLS * 3.8, r / ROWS * 3.8, seed)
-        const fade = Math.min(1, c / 25, (COLS - 1 - c) / 25, r / 15, (ROWS - 1 - r) / 15)
+        const fade = Math.min(1, c / 6, (COLS - 1 - c) / 6, r / 4, (ROWS - 1 - r) / 4)
         return h * fade
       })
     )
@@ -90,7 +103,7 @@ export function useHexagonesGlobe(seed) {
         masses.push(masse)
       }
     }
-    masses.forEach(m => { if (m.length < 60) m.forEach(([c, r]) => { massIdx[r][c] = -1 }) })
+    masses.forEach(m => { if (m.length < 4) m.forEach(([c, r]) => { massIdx[r][c] = -1 }) })
 
     const meshes = []
     for (let r = 0; r < ROWS; r++) {

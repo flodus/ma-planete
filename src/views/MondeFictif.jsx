@@ -37,6 +37,7 @@ export default function MondeFictif({ seed, onMondeReel, onRetour, onPaysDoubleC
   useEffect(() => {
     let lastTime = performance.now()
     function animateClouds(now) {
+      if (now - lastTime < 33) { cloudAnimRef.current = requestAnimationFrame(animateClouds); return }
       const delta = Math.min(0.05, (now - lastTime) / 1000)
       lastTime = now
       tempsRef.current += delta * 0.5
