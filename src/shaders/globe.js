@@ -33,6 +33,17 @@ void main(){
 export const fondFrag = `varying vec2 vUv; uniform sampler2D uTexture;
 void main(){gl_FragColor=texture2D(uTexture,vUv);}`
 
+// Néons avec morph sphère → mercator (utilise aPlane de extraireSegmentsNeon / useContoursFictifs)
+export const neonMorphVert = `
+attribute vec3 aPlane;
+uniform float uTransition;
+varying float vScan;
+void main() {
+  vScan = atan(position.x, position.z);
+  vec3 pos = mix(position, aPlane, uTransition);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+}`
+
 // Néons — positions sphère pré-calculées, vScan = longitude
 export const neonVertexShader = `
 varying float vScan;

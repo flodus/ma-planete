@@ -1,16 +1,22 @@
 // components/scene/SphereBase.jsx — sphère de base partagée (seule source de vérité)
 // Utilisée par PlanetCanvas ET GlobeFictif
 import { useMemo } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { fondVertexShader, fondFrag, creerTexture } from '../../shaders/globe.js'
 
-export default function SphereBase({ rayon }) {
+export default function SphereBase({ rayon, transitionRef = null }) {
   const texture  = useMemo(() => creerTexture(), [])
   const uniforms = useMemo(() => ({
     uTransition: { value: 0 },
     uRadius:     { value: rayon },
     uTexture:    { value: texture },
   }), [rayon, texture])
+
+  // Sync uTransition depuis le parent (evite re-render)
+  useFrame(() => {
+    if (transitionRef !== null) uniforms.uTransition.value = transitionRef.current
+  })
 
   return (
     <mesh renderOrder={0}>

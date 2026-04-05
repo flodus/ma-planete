@@ -2,22 +2,12 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { RAYON, PI, lineVertexShader, fragMonde, fondVertexShader, fondFrag, neonFrag, creerTexture } from '../../shaders/globe.js'
+import { RAYON, PI, lineVertexShader, fragMonde, neonMorphVert, neonFrag } from '../../shaders/globe.js'
+import SphereBase from './SphereBase.jsx'
 import { extraireSegments, extraireSegmentsNeon, trouverPays, couleurNeon, estPaysDuJeu, mainlandDuPays } from '../../utils/geo.js'
 import { useGlobeOrbit } from '../../hooks/useGlobeOrbit.js'
 import { useMercatorZoom } from '../../hooks/useMercatorZoom.js'
 import PAYS from '../../data/pays.json'
-
-// Vertex shader néon avec morph sphère → mercator (utilise aPlane de extraireSegmentsNeon)
-const neonMorphVert = `
-attribute vec3 aPlane;
-uniform float uTransition;
-varying float vScan;
-void main() {
-  vScan = atan(position.x, position.z);
-  vec3 pos = mix(position, aPlane, uTransition);
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-}`
 
 // Réinitialise la caméra lors du passage en vue mercator
 export function ResetCameraPlan({ actif }) {
@@ -57,11 +47,9 @@ export default function SceneGlobeMercator({
   onEntrerMercator, mercatorInstantane = false, fusionsActives = []
 }) {
   const groupRef=useRef()
-  const texture=useMemo(()=>creerTexture(),[])
 
   const transLerp = useRef(mercatorInstantane ? 1 : 0)
 
-  const uFond=useMemo(()=>({uTransition:{value: mercatorInstantane?1:0},uRadius:{value:RAYON},uTexture:{value:texture}}),[texture]) // eslint-disable-line
   const uMonde=useMemo(()=>({uTransition:{value: mercatorInstantane?1:0},uRadius:{value:RAYON}}),[]); // eslint-disable-line
 
   // Matériaux néons permanents — 1 par pays hardcodé
@@ -160,7 +148,6 @@ void main(){
     transLerp.current += (cible - transLerp.current) * Math.min(1, delta * 2.5)
     const t = transLerp.current
 
-    uFond.uTransition.value  = t
     uMonde.uTransition.value = t
 
     // Animer tous les néons + synchro morph
@@ -200,11 +187,7 @@ void main(){
   return (
     <group ref={groupRef}>
     <group>
-    <mesh renderOrder={0}>
-      <planeGeometry args={[RAYON*2*PI,RAYON*PI,64,32]}/>
-      <shaderMaterial vertexShader={fondVertexShader} fragmentShader={fondFrag}
-        uniforms={uFond} side={THREE.DoubleSide}/>
-    </mesh>
+    <SphereBase rayon={RAYON} transitionRef={transLerp} />
 
     {geos.monde && (
       <lineSegments geometry={geos.monde} renderOrder={2}>

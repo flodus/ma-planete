@@ -18,6 +18,13 @@ function svgVersSphere(sx, sy) {
   return [R * Math.cos(la) * Math.sin(lo), R * Math.sin(la), R * Math.cos(la) * Math.cos(lo)]
 }
 
+// Coordonnées mercator (plan) — même échelle que extraireSegmentsNeon du monde réel
+function svgVersMercator(sx, sy) {
+  const lon = (sx / VB_W) * 360 - 180
+  const lat = 90 - (sy / VB_H) * 180
+  return [lon / 180 * RAYON_GLOBE * PI, lat / 90 * RAYON_GLOBE * PI / 2, 0.06]
+}
+
 export function useContoursFictifs(seed) {
   const [contours, setContours] = useState([])
 
@@ -80,8 +87,8 @@ export function useContoursFictifs(seed) {
       }
     })
 
-    // ─── Extraction de toutes les arêtes frontières/côtes (géométrie unique) ──
-    const pts = []
+    // ─── Extraction de toutes les arêtes frontières/côtes ────────────────────
+    const sphere = [], plane = []
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const p = paysCarte[r][c]
@@ -98,14 +105,16 @@ export function useContoursFictifs(seed) {
           if (p === nP) continue // même royaume → pas de frontière
           const [x0, y0] = coins[k]
           const [x1, y1] = coins[(k + 1) % 6]
-          pts.push(...svgVersSphere(x0, y0), ...svgVersSphere(x1, y1))
+          sphere.push(...svgVersSphere(x0, y0),  ...svgVersSphere(x1, y1))
+          plane.push( ...svgVersMercator(x0, y0), ...svgVersMercator(x1, y1))
         }
       }
     }
 
-    // ─── Construire une seule BufferGeometry pour tous les contours ───────────
+    // ─── Construire la BufferGeometry avec position (sphère) + aPlane (mercator)
     const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3))
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(sphere), 3))
+    geo.setAttribute('aPlane',   new THREE.BufferAttribute(new Float32Array(plane),  3))
     const result = [{ id: 0, geo }]
 
     setContours(prev => { prev.forEach(({ geo }) => geo.dispose()); return result })
